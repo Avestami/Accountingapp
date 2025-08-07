@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Auth Data</title>
+</head>
+<body>
+    <h1>Authentication Debug Tool</h1>
+    <button onclick="checkAuthData()">Check Auth Data</button>
+    <button onclick="clearAuthData()">Clear All Auth Data</button>
+    <button onclick="resetLoginAttempts()">Reset Login Attempts Only</button>
+    <div id="output"></div>
+
+    <script>
+        function checkAuthData() {
+            const output = document.getElementById('output');
+            const authData = {
+                loginAttempts: localStorage.getItem('auth_login_attempts'),
+                lockoutUntil: localStorage.getItem('auth_lockout_until'),
+                token: localStorage.getItem('auth_token'),
+                user: localStorage.getItem('auth_user'),
+                permissions: localStorage.getItem('auth_permissions'),
+                lastActivity: localStorage.getItem('last_activity')
+            };
+            
+            output.innerHTML = '<h3>Current Auth Data:</h3><pre>' + JSON.stringify(authData, null, 2) + '</pre>';
+        }
+        
+        function clearAuthData() {
+            localStorage.removeItem('auth_login_attempts');
+            localStorage.removeItem('auth_lockout_until');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('auth_permissions');
+            localStorage.removeItem('last_activity');
+            
+            document.getElementById('output').innerHTML = '<h3>All auth data cleared!</h3>';
+        }
+        
+        function resetLoginAttempts() {
+            localStorage.removeItem('auth_login_attempts');
+            localStorage.removeItem('auth_lockout_until');
+            
+            document.getElementById('output').innerHTML = '<h3>Login attempts reset!</h3>';
+        }
+    </script>
+</body>
+</html>

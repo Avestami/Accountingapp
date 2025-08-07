@@ -1,0 +1,333 @@
+.persian-datepicker {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  font-family: 'Vazir', 'Tahoma', sans-serif;
+  direction: rtl;
+}
+
+.persian-datepicker-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.persian-datepicker-input:hover {
+  border-color: #007bff;
+}
+
+.persian-datepicker-input.disabled {
+  background: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.persian-datepicker-field {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  text-align: right;
+}
+
+.persian-datepicker-field::placeholder {
+  color: #999;
+}
+
+.persian-datepicker-field:disabled {
+  cursor: not-allowed;
+}
+
+.persian-datepicker-icon {
+  padding: 0 12px;
+  color: #666;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.persian-datepicker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.persian-datepicker-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+  padding: 12px;
+}
+
+.persian-datepicker-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.persian-datepicker-nav-btn {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.persian-datepicker-nav-btn:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.persian-datepicker-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  flex: 1;
+  text-align: center;
+}
+
+.persian-datepicker-calendar {
+  padding: 16px;
+}
+
+.persian-datepicker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.persian-datepicker-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  padding: 8px 4px;
+}
+
+.persian-datepicker-days {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.persian-datepicker-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.persian-datepicker-day {
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.persian-datepicker-day:hover {
+  background: #e9ecef;
+}
+
+.persian-datepicker-day.other-month {
+  color: #ccc;
+}
+
+.persian-datepicker-day.today {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+}
+
+.persian-datepicker-day.selected {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.persian-datepicker-day.selected:hover {
+  background: #0056b3;
+}
+
+.persian-datepicker-time {
+  border-top: 1px solid #e1e5e9;
+  padding: 16px;
+  background: #f8f9fa;
+}
+
+.persian-datepicker-time-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.persian-datepicker-time-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.persian-datepicker-time-group label {
+  font-size: 12px;
+  color: #666;
+  font-weight: bold;
+}
+
+.persian-datepicker-time-select {
+  padding: 6px 8px;
+  border: 1px solid #e1e5e9;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  min-width: 60px;
+  text-align: center;
+}
+
+.persian-datepicker-time-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.persian-datepicker-time-separator {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-top: 16px;
+}
+
+.persian-datepicker-footer {
+  border-top: 1px solid #e1e5e9;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  background: #f8f9fa;
+}
+
+.persian-datepicker-today-btn,
+.persian-datepicker-close-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.persian-datepicker-today-btn {
+  background: #28a745;
+  color: white;
+}
+
+.persian-datepicker-today-btn:hover {
+  background: #218838;
+}
+
+.persian-datepicker-close-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.persian-datepicker-close-btn:hover {
+  background: #545b62;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .persian-datepicker-dropdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 320px;
+  }
+  
+  .persian-datepicker-day {
+    min-height: 32px;
+    font-size: 13px;
+  }
+  
+  .persian-datepicker-weekday {
+    font-size: 11px;
+    padding: 6px 2px;
+  }
+}
+
+/* Animation for dropdown */
+.persian-datepicker-dropdown {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus styles for accessibility */
+.persian-datepicker-day:focus,
+.persian-datepicker-nav-btn:focus,
+.persian-datepicker-today-btn:focus,
+.persian-datepicker-close-btn:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .persian-datepicker-input {
+    border-width: 3px;
+  }
+  
+  .persian-datepicker-day.selected {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .persian-datepicker-input,
+  .persian-datepicker-nav-btn,
+  .persian-datepicker-day,
+  .persian-datepicker-today-btn,
+  .persian-datepicker-close-btn {
+    transition: none;
+  }
+  
+  .persian-datepicker-dropdown {
+    animation: none;
+  }
+}

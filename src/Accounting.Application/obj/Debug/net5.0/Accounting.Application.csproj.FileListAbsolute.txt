@@ -1,0 +1,15 @@
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.deps.json
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.dll
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\ref\Accounting.Application.dll
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.pdb
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\Accounting.Domain.dll
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\bin\Debug\net5.0\Accounting.Domain.pdb
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.AssemblyReference.cache
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.AssemblyInfoInputs.cache
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.AssemblyInfo.cs
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.CoreCompileInputs.cache
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.CopyComplete
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.dll
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\ref\Accounting.Application.dll
+D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.pdb

@@ -1,0 +1,12 @@
+using MediatR;
+
+namespace Accounting.Application.Common.Commands
+{
+    public interface ICommand : IRequest
+    {
+    }
+
+    public interface ICommand<out TResponse> : IRequest<TResponse>
+    {
+    }
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Credentials</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .credential-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .role {
+            font-weight: bold;
+            color: #2563eb;
+            font-size: 18px;
+        }
+        .permissions {
+            color: #059669;
+            margin-top: 5px;
+        }
+        .credentials {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .test-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .test-link:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Travel Accounting System - Test Login Credentials</h1>
+    <p>Use these credentials to test different user roles and permissions:</p>
+    
+    <div class="credential-card">
+        <div class="role">Admin User</div>
+        <div class="permissions">Permissions: admin, sales, finance, reports, settings</div>
+        <div class="credentials">
+            Company: demo<br>
+            Username: admin<br>
+            Password: admin123
+        </div>
+        <a href="http://localhost:5173/" class="test-link">Test Login</a>
+    </div>
+    
+    <div class="credential-card">
+        <div class="role">Accountant</div>
+        <div class="permissions">Permissions: finance, reports</div>
+        <div class="credentials">
+            Company: demo<br>
+            Username: accountant<br>
+            Password: acc123
+        </div>
+        <a href="http://localhost:5173/" class="test-link">Test Login</a>
+    </div>
+    
+    <div class="credential-card">
+        <div class="role">Sales Representative</div>
+        <div class="permissions">Permissions: sales</div>
+        <div class="credentials">
+            Company: demo<br>
+            Username: sales<br>
+            Password: sales123
+        </div>
+        <a href="http://localhost:5173/" class="test-link">Test Login</a>
+    </div>
+    
+    <div class="credential-card">
+        <div class="role">Regular User</div>
+        <div class="permissions">Permissions: none (dashboard only)</div>
+        <div class="credentials">
+            Company: demo<br>
+            Username: user<br>
+            Password: user123
+        </div>
+        <a href="http://localhost:5173/" class="test-link">Test Login</a>
+    </div>
+    
+    <h2>Expected Behavior:</h2>
+    <ul>
+        <li><strong>Admin:</strong> Should see all navigation items (Sales, Finance, Reports, Settings)</li>
+        <li><strong>Accountant:</strong> Should see Finance and Reports only</li>
+        <li><strong>Sales:</strong> Should see Sales section only</li>
+        <li><strong>User:</strong> Should see Dashboard only</li>
+    </ul>
+    
+    <p><strong>Note:</strong> Make sure to clear your browser's localStorage before testing different users to avoid cached authentication data.</p>
+    
+    <script>
+        // Add a button to clear localStorage
+        const clearButton = document.createElement('button');
+        clearButton.textContent = 'Clear Browser Storage';
+        clearButton.style.cssText = 'background: #dc2626; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 20px 0;';
+        clearButton.onclick = function() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('Browser storage cleared! You can now test different users.');
+        };
+        document.body.appendChild(clearButton);
+    </script>
+</body>
+</html>
