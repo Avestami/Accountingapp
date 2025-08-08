@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: accounting-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrongPassword123!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - accounting-network
+    restart: unless-stopped
+
+  # .NET Core API
+  api:
+    build:
+      context: .
+      dockerfile: src/Accounting.API/Dockerfile
+    container_name: accounting-api
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=AccountingDb;User Id=sa;Password=YourStrongPassword123!;MultipleActiveResultSets=true
+      - Jwt__Key=your-secret-key-here-make-it-long-enough-for-security-accounting-system
+    ports:
+      - "5000:80"
+    networks:
+      - accounting-network
+    restart: unless-stopped
+
+  # Vue.js Frontend
+  ui:
+    build:
+      context: .
+      dockerfile: travel-accounting-ui/Dockerfile
+    container_name: accounting-ui
+    depends_on:
+      - api
+    ports:
+      - "5678:80"
+    networks:
+      - accounting-network
+    restart: unless-stopped
+
+networks:
+  accounting-network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+    driver: local
