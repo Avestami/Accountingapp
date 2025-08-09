@@ -23,9 +23,6 @@ namespace Accounting.API
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    
-                    // Configure static files for profile pictures
-                    webBuilder.UseStaticFiles();
                 });
     }
 }
