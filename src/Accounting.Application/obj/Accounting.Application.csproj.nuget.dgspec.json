@@ -62,11 +62,11 @@
             },
             "MediatR": {
               "target": "Package",
-              "version": "[13.0.0, )"
+              "version": "[8.1.0, )"
             },
             "MediatR.Extensions.Microsoft.DependencyInjection": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.1.0, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
