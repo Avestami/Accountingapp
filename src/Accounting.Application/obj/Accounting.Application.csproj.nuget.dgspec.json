@@ -1,35 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Application\\Accounting.Application.csproj": {}
+    "D:\\Accountingapp\\src\\Accounting.Application\\Accounting.Application.csproj": {}
   },
   "projects": {
-    "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Application\\Accounting.Application.csproj": {
+    "D:\\Accountingapp\\src\\Accounting.Application\\Accounting.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Application\\Accounting.Application.csproj",
+        "projectUniqueName": "D:\\Accountingapp\\src\\Accounting.Application\\Accounting.Application.csproj",
         "projectName": "Accounting.Application",
-        "projectPath": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Application\\Accounting.Application.csproj",
-        "packagesPath": "C:\\Users\\Avesta\\.nuget\\packages\\",
-        "outputPath": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Application\\obj\\",
+        "projectPath": "D:\\Accountingapp\\src\\Accounting.Application\\Accounting.Application.csproj",
+        "packagesPath": "C:\\Users\\Parsa\\.nuget\\packages\\",
+        "outputPath": "D:\\Accountingapp\\src\\Accounting.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Avesta\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Parsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\Accounting.Domain.csproj": {
-                "projectPath": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\Accounting.Domain.csproj"
+              "D:\\Accountingapp\\src\\Accounting.Domain\\Accounting.Domain.csproj": {
+                "projectPath": "D:\\Accountingapp\\src\\Accounting.Domain\\Accounting.Domain.csproj"
               }
             }
           }
@@ -38,27 +36,45 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
             "AutoMapper.Extensions.Microsoft.DependencyInjection": {
               "target": "Package",
-              "version": "[8.1.1, )"
+              "version": "[12.0.1, )"
             },
             "FluentValidation": {
               "target": "Package",
               "version": "[10.4.0, )"
             },
+            "MediatR": {
+              "target": "Package",
+              "version": "[13.0.0, )"
+            },
             "MediatR.Extensions.Microsoft.DependencyInjection": {
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[5.0.17, )"
+            },
             "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
-              "version": "[5.0.0, )"
+              "version": "[8.0.0, )"
             }
           },
           "imports": [
@@ -67,37 +83,50 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.301\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.303\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\Accounting.Domain.csproj": {
+    "D:\\Accountingapp\\src\\Accounting.Domain\\Accounting.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\Accounting.Domain.csproj",
+        "projectUniqueName": "D:\\Accountingapp\\src\\Accounting.Domain\\Accounting.Domain.csproj",
         "projectName": "Accounting.Domain",
-        "projectPath": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\Accounting.Domain.csproj",
-        "packagesPath": "C:\\Users\\Avesta\\.nuget\\packages\\",
-        "outputPath": "D:\\work\\Karlancer\\Accountingproject1\\src\\Accounting.Domain\\obj\\",
+        "projectPath": "D:\\Accountingapp\\src\\Accounting.Domain\\Accounting.Domain.csproj",
+        "packagesPath": "C:\\Users\\Parsa\\.nuget\\packages\\",
+        "outputPath": "D:\\Accountingapp\\src\\Accounting.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Avesta\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\Parsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -110,7 +139,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net5.0": {
@@ -121,16 +156,31 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[5.0.0, 5.0.0]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.301\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.303\\RuntimeIdentifierGraph.json"
         }
       }
     }

@@ -1,22 +1,25 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Tickets.Commands;
+using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
-using Accounting.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Tickets.Handlers
 {
-    public class DeleteTicketCommandHandler : ICommandHandler<DeleteTicketCommand, Result<bool>>
+    public class DeleteTicketCommandHandler : ICommandHandler<DeleteTicketCommand, Result>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAccountingDbContext _context;
 
-        public DeleteTicketCommandHandler(ApplicationDbContext context)
+        public DeleteTicketCommandHandler(IAccountingDbContext context)
         {
             _context = context;
         }
 
-        public async Task<Result<bool>> Handle(DeleteTicketCommand command, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeleteTicketCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -26,13 +29,13 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 if (ticket == null)
                 {
-                    return Result<bool>.Failure("Ticket not found");
+                    return Result.Failure("Ticket not found");
                 }
 
                 // Check if ticket can be deleted (only Unissued tickets can be deleted)
-                if (ticket.Status != TicketStatus.Unissued)
+                if (ticket.Status != TicketStatus.Draft)
                 {
-                    return Result<bool>.Failure("Only unissued tickets can be deleted");
+                    return Result.Failure("Only draft tickets can be deleted");
                 }
 
                 // Remove ticket items first
@@ -43,11 +46,11 @@ namespace Accounting.Application.Features.Tickets.Handlers
                 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result<bool>.Success(true);
+                return Result.Success();
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure($"Error deleting ticket: {ex.Message}");
+                return Result.Failure($"Error deleting ticket: {ex.Message}");
             }
         }
     }

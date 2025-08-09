@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace Accounting.Domain.Entities
 {
@@ -15,7 +16,7 @@ namespace Accounting.Domain.Entities
         [MaxLength(50)]
         public string? Code { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? TaxId { get; set; }
 
         [MaxLength(500)]
@@ -30,30 +31,28 @@ namespace Accounting.Domain.Entities
         [MaxLength(100)]
         public string? ContactPerson { get; set; }
 
-        public bool IsCustomer { get; set; } = true;
+        public bool IsCustomer { get; set; } = false;
         public bool IsSupplier { get; set; } = false;
         public bool IsActive { get; set; } = true;
 
-        // Opening balances
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal OpeningBalanceIRR { get; set; } = 0;
-
-        [Column(TypeName = "decimal(18,4)")]
+        // Opening balances in different currencies
+        [Column(TypeName = "decimal(18,2)")]
         public decimal OpeningBalanceUSD { get; set; } = 0;
 
-        [Column(TypeName = "decimal(18,4)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal OpeningBalanceEUR { get; set; } = 0;
 
-        [Column(TypeName = "decimal(18,4)")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OpeningBalanceIRR { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal OpeningBalanceAED { get; set; } = 0;
 
-        // Credit limit
-        [Column(TypeName = "decimal(18,4)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal CreditLimit { get; set; } = 0;
 
         // Navigation properties
         public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
-        public virtual ICollection<FxTransaction> FxTransactions { get; set; } = new List<FxTransaction>();
     }
 }

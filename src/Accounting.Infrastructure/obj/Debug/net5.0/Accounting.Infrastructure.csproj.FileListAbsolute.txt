@@ -15,3 +15,5 @@ D:\work\Karlancer\Accountingproject1\src\Accounting.Infrastructure\obj\Debug\net
 D:\work\Karlancer\Accountingproject1\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infrastructure.dll
 D:\work\Karlancer\Accountingproject1\src\Accounting.Infrastructure\obj\Debug\net5.0\ref\Accounting.Infrastructure.dll
 D:\work\Karlancer\Accountingproject1\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infrastructure.pdb
+D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infrastructure.dll
+D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infrastructure.pdb

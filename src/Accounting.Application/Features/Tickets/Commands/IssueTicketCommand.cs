@@ -1,6 +1,10 @@
+using Accounting.Application.Common.Commands;
+using Accounting.Application.Common.Models;
+using Accounting.Application.DTOs;
+
 namespace Accounting.Application.Features.Tickets.Commands
 {
-    public class IssueTicketCommand
+    public class IssueTicketCommand : ICommand<Result<TicketDto>>
     {
         public int Id { get; }
         public string? Notes { get; }

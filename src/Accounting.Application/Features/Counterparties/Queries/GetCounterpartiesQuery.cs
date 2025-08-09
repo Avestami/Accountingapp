@@ -1,6 +1,10 @@
+using Accounting.Application.Common.Models;
+using Accounting.Application.Common.Queries;
+using Accounting.Application.DTOs;
+
 namespace Accounting.Application.Features.Counterparties.Queries
 {
-    public class GetCounterpartiesQuery
+    public class GetCounterpartiesQuery : IQuery<Result<PagedResult<CounterpartyDto>>>
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

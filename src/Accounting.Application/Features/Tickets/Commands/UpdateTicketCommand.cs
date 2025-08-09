@@ -1,9 +1,13 @@
+using System;
+using System.Collections.Generic;
+using Accounting.Application.Common.Commands;
+using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Tickets.Commands
 {
-    public class UpdateTicketCommand
+    public class UpdateTicketCommand : ICommand<Result<TicketDto>>
     {
         public int Id { get; set; }
         public int CounterpartyId { get; set; }

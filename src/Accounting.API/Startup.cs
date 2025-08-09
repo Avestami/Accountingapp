@@ -18,7 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using MediatR;
 using Accounting.Infrastructure.Data;
 using Accounting.Application.Interfaces;
-using Accounting.Application.Features.Vouchers.Handlers;
+using Accounting.Application.Features.Tickets.Handlers;
 using Accounting.Infrastructure;
 using Accounting.Infrastructure.Repositories;
 
@@ -40,6 +40,9 @@ namespace Accounting.API
             services.AddDbContext<AccountingDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            // Register DbContext interface
+            services.AddScoped<IAccountingDbContext>(provider => provider.GetService<AccountingDbContext>());
+
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IVoucherRepository, VoucherRepository>();
@@ -47,30 +50,39 @@ namespace Accounting.API
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Add MediatR
-            services.AddMediatR(typeof(CreateVoucherCommandHandler).Assembly);
+            services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
 
             // Add AutoMapper
-            services.AddAutoMapper(typeof(CreateVoucherCommandHandler).Assembly);
+            services.AddAutoMapper(typeof(CreateTicketCommandHandler).Assembly);
 
             // Add JWT Authentication
-            var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
-            services.AddAuthentication(x =>
+            var jwtKey = Configuration["Jwt:Key"];
+            if (!string.IsNullOrEmpty(jwtKey))
             {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
+                var key = Encoding.ASCII.GetBytes(jwtKey);
+                services.AddAuthentication(x =>
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+            }
+            else
+            {
+                // Add basic authentication if JWT key is not configured
+                services.AddAuthentication();
+            }
 
             // Add CORS
             services.AddCors(options =>

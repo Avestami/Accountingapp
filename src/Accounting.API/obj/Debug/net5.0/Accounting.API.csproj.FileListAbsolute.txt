@@ -70,3 +70,5 @@ D:\work\Karlancer\Accountingproject1\src\Accounting.API\bin\Debug\net5.0\ref\Acc
 D:\work\Karlancer\Accountingproject1\src\Accounting.API\bin\Debug\net5.0\Accounting.API.pdb
 D:\work\Karlancer\Accountingproject1\src\Accounting.API\obj\Debug\net5.0\Accounting.API.csproj.CopyComplete
 D:\work\Karlancer\Accountingproject1\src\Accounting.API\obj\Debug\net5.0\Accounting.API.genruntimeconfig.cache
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.dll
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.pdb

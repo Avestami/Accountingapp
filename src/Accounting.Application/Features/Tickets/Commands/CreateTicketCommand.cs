@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Accounting.Application.Common.Commands;
+using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Tickets.Commands
 {
-    public class CreateTicketCommand : ICommand<TicketDto>
+    public class CreateTicketCommand : ICommand<Result<TicketDto>>
     {
         [Required]
         public int CounterpartyId { get; set; }
@@ -23,7 +26,7 @@ namespace Accounting.Application.Features.Tickets.Commands
         [MaxLength(3)]
         public string Currency { get; set; } = "IRR";
 
-        public TicketType Type { get; set; } = TicketType.Air;
+        public TicketType Type { get; set; } = TicketType.Travel;
 
         public List<CreateTicketItemDto> Items { get; set; } = new List<CreateTicketItemDto>();
     }

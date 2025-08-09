@@ -13,3 +13,11 @@ D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0
 D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.dll
 D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\ref\Accounting.Application.dll
 D:\work\Karlancer\Accountingproject1\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.pdb
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.dll
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.pdb
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.AssemblyReference.cache
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.AssemblyInfoInputs.cache
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.AssemblyInfo.cs
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.CoreCompileInputs.cache
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.sourcelink.json

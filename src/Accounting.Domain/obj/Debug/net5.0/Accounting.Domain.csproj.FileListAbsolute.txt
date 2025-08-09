@@ -10,3 +10,16 @@ D:\work\Karlancer\Accountingproject1\src\Accounting.Domain\obj\Debug\net5.0\Acco
 D:\work\Karlancer\Accountingproject1\src\Accounting.Domain\obj\Debug\net5.0\ref\Accounting.Domain.dll
 D:\work\Karlancer\Accountingproject1\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.pdb
 D:\work\Karlancer\Accountingproject1\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.csproj.AssemblyReference.cache
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.csproj.AssemblyReference.cache
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.AssemblyInfoInputs.cache
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.AssemblyInfo.cs
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.csproj.CoreCompileInputs.cache
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.sourcelink.json
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.dll
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\Accounting.Domain.pdb
+D:\Accountingapp\src\Accounting.Domain\bin\Debug\net5.0\Accounting.Domain.deps.json
+D:\Accountingapp\src\Accounting.Domain\bin\Debug\net5.0\Accounting.Domain.dll
+D:\Accountingapp\src\Accounting.Domain\bin\Debug\net5.0\Accounting.Domain.pdb
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\refint\Accounting.Domain.dll
+D:\Accountingapp\src\Accounting.Domain\obj\Debug\net5.0\ref\Accounting.Domain.dll

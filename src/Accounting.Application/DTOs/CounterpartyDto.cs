@@ -1,3 +1,5 @@
+using System;
+
 namespace Accounting.Application.DTOs
 {
     public class CounterpartyDto

@@ -11,7 +11,6 @@ using Accounting.Application.Interfaces;
 using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
 using Accounting.Application.Common;
-using Accounting.Application.Common.Models;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;

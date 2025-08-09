@@ -1,8 +1,12 @@
+using System;
+using Accounting.Application.Common.Models;
+using Accounting.Application.Common.Queries;
+using Accounting.Application.DTOs;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Tickets.Queries
 {
-    public class GetTicketsQuery
+    public class GetTicketsQuery : IQuery<Result<PagedResult<TicketDto>>>
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

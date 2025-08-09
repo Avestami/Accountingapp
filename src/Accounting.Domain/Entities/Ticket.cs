@@ -23,11 +23,14 @@ namespace Accounting.Domain.Entities
         public int CreatedByUserId { get; set; }
         public int? AssignedToUserId { get; set; }
         public int? ApprovedByUserId { get; set; }
+        public int CounterpartyId { get; set; }
+        public string? CancellationReason { get; set; }
         
         // Navigation Properties
         public virtual User CreatedByUser { get; set; }
         public virtual User AssignedToUser { get; set; }
         public virtual User ApprovedByUser { get; set; }
+        public virtual Counterparty Counterparty { get; set; }
         public virtual ICollection<TicketItem> Items { get; set; }
         public virtual ICollection<AuditLog> AuditLogs { get; set; }
         

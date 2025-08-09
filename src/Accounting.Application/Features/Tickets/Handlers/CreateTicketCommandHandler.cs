@@ -1,19 +1,23 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Tickets.Commands;
 using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
-using Accounting.Infrastructure.Data;
+using Accounting.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Tickets.Handlers
 {
     public class CreateTicketCommandHandler : ICommandHandler<CreateTicketCommand, Result<TicketDto>>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAccountingDbContext _context;
 
-        public CreateTicketCommandHandler(ApplicationDbContext context)
+        public CreateTicketCommandHandler(IAccountingDbContext context)
         {
             _context = context;
         }
@@ -28,7 +32,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 if (counterparty == null)
                 {
-                    return Result<TicketDto>.Failure("Counterparty not found");
+                    return Result.Failure<TicketDto>("Counterparty not found");
                 }
 
                 // Generate ticket number
@@ -42,7 +46,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     Description = command.Description,
                     Amount = command.Amount,
                     Currency = command.Currency,
-                    Status = TicketStatus.Unissued,
+                    Status = TicketStatus.Draft,
                     Type = command.Type,
                     CounterpartyId = command.CounterpartyId,
                     CreatedAt = DateTime.UtcNow
@@ -55,17 +59,16 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     {
                         PassengerName = itemDto.PassengerName,
                         PassengerAge = itemDto.PassengerAge,
-                        AirlineId = itemDto.AirlineId,
-                        OriginId = itemDto.OriginId,
-                        DestinationId = itemDto.DestinationId,
+                        AirlineId = itemDto.AirlineId ?? 0,
+                        OriginId = itemDto.OriginId ?? 0,
+                        DestinationId = itemDto.DestinationId ?? 0,
                         ServiceDate = itemDto.ServiceDate,
                         FlightNumber = itemDto.FlightNumber,
                         SeatNumber = itemDto.SeatNumber,
                         Class = itemDto.Class,
                         Amount = itemDto.Amount,
                         Currency = itemDto.Currency,
-                        Notes = itemDto.Notes,
-                        Itinerary = itemDto.Itinerary
+                        Notes = itemDto.Notes
                     };
 
                     ticket.Items.Add(ticketItem);
@@ -80,7 +83,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
             }
             catch (Exception ex)
             {
-                return Result<TicketDto>.Failure($"Error creating ticket: {ex.Message}");
+                return Result.Failure<TicketDto>($"Error creating ticket: {ex.Message}");
             }
         }
 
@@ -109,34 +112,36 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
         private async Task<TicketDto> MapToDto(Ticket ticket)
         {
-            await _context.Entry(ticket)
-                .Reference(t => t.Counterparty)
-                .LoadAsync();
+            // Load related entities
+            var ticketWithIncludes = await _context.Tickets
+                .Include(t => t.Counterparty)
+                .Include(t => t.Items)
+                    .ThenInclude(ti => ti.Airline)
+                .Include(t => t.Items)
+                    .ThenInclude(ti => ti.Origin)
+                .Include(t => t.Items)
+                    .ThenInclude(ti => ti.Destination)
+                .FirstOrDefaultAsync(t => t.Id == ticket.Id);
 
-            await _context.Entry(ticket)
-                .Collection(t => t.Items)
-                .Query()
-                .Include(ti => ti.Airline)
-                .Include(ti => ti.Origin)
-                .Include(ti => ti.Destination)
-                .LoadAsync();
+            if (ticketWithIncludes == null)
+                ticketWithIncludes = ticket;
 
             var dto = new TicketDto
             {
-                Id = ticket.Id,
-                TicketNumber = ticket.TicketNumber,
-                Title = ticket.Title,
-                Description = ticket.Description,
-                Amount = ticket.Amount,
-                Currency = ticket.Currency,
-                Status = ticket.Status,
-                Type = ticket.Type,
-                CounterpartyId = ticket.CounterpartyId,
-                CounterpartyName = ticket.Counterparty?.Name ?? "",
-                CreatedAt = ticket.CreatedAt,
-                ModifiedAt = ticket.ModifiedAt,
-                CancellationReason = ticket.CancellationReason,
-                Items = ticket.Items.Select(item => new TicketItemDto
+                Id = ticketWithIncludes.Id,
+                TicketNumber = ticketWithIncludes.TicketNumber,
+                Title = ticketWithIncludes.Title,
+                Description = ticketWithIncludes.Description,
+                Amount = ticketWithIncludes.Amount,
+                Currency = ticketWithIncludes.Currency,
+                Status = ticketWithIncludes.Status,
+                Type = ticketWithIncludes.Type,
+                CounterpartyId = ticketWithIncludes.CounterpartyId,
+                CounterpartyName = ticketWithIncludes.Counterparty?.Name ?? "",
+                CreatedAt = ticketWithIncludes.CreatedAt,
+                ModifiedAt = ticketWithIncludes.UpdatedAt,
+                CancellationReason = ticketWithIncludes.CancellationReason,
+                Items = ticketWithIncludes.Items.Select(item => new TicketItemDto
                 {
                     Id = item.Id,
                     PassengerName = item.PassengerName,
@@ -159,7 +164,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
             };
 
             // Calculate 5-day rule
-            var earliestServiceDate = ticket.Items
+            var earliestServiceDate = ticketWithIncludes.Items
                 .Where(i => i.ServiceDate.HasValue)
                 .Select(i => i.ServiceDate!.Value)
                 .DefaultIfEmpty(DateTime.MaxValue)

@@ -1,17 +1,21 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Common.Queries;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Tickets.Queries;
-using Accounting.Infrastructure.Data;
+using Accounting.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Tickets.Handlers
 {
     public class GetTicketByIdQueryHandler : IQueryHandler<GetTicketByIdQuery, Result<TicketDto>>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAccountingDbContext _context;
 
-        public GetTicketByIdQueryHandler(ApplicationDbContext context)
+        public GetTicketByIdQueryHandler(IAccountingDbContext context)
         {
             _context = context;
         }
@@ -32,7 +36,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 if (ticket == null)
                 {
-                    return Result<TicketDto>.Failure("Ticket not found");
+                    return Result.Failure<TicketDto>("Ticket not found");
                 }
 
                 var dto = new TicketDto
@@ -48,7 +52,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     CounterpartyId = ticket.CounterpartyId,
                     CounterpartyName = ticket.Counterparty?.Name ?? "",
                     CreatedAt = ticket.CreatedAt,
-                    ModifiedAt = ticket.ModifiedAt,
+                    ModifiedAt = ticket.UpdatedAt,
                     CancellationReason = ticket.CancellationReason,
                     Items = ticket.Items.Select(item => new TicketItemDto
                     {
@@ -90,7 +94,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
             }
             catch (Exception ex)
             {
-                return Result<TicketDto>.Failure($"Error retrieving ticket: {ex.Message}");
+                return Result.Failure<TicketDto>($"Error retrieving ticket: {ex.Message}");
             }
         }
     }

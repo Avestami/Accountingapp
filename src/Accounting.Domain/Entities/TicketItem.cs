@@ -4,31 +4,32 @@ namespace Accounting.Domain.Entities
 {
     public class TicketItem : BaseEntity
     {
-        public string Description { get; set; }
-        public decimal Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal TotalAmount { get; set; }
+        public string PassengerName { get; set; }
+        public string? PassengerAge { get; set; }
+        public int AirlineId { get; set; }
+        public int OriginId { get; set; }
+        public int DestinationId { get; set; }
+        public DateTime? ServiceDate { get; set; }
+        public string FlightNumber { get; set; }
+        public string SeatNumber { get; set; }
+        public string Class { get; set; }
+        public decimal Amount { get; set; }
         public string Currency { get; set; }
-        public DateTime ItemDate { get; set; }
         public string Notes { get; set; }
-        public string ReceiptPath { get; set; }
+        public string Itinerary { get; set; }
         
         // Foreign Key
         public int TicketId { get; set; }
         
-        // Navigation Property
+        // Navigation Properties
         public virtual Ticket Ticket { get; set; }
+        public virtual Airline Airline { get; set; }
+        public virtual Origin Origin { get; set; }
+        public virtual Destination Destination { get; set; }
         
         public TicketItem()
         {
-            Quantity = 1;
             Currency = "USD";
-            ItemDate = DateTime.UtcNow;
-        }
-        
-        public void CalculateTotal()
-        {
-            TotalAmount = Quantity * UnitPrice;
         }
     }
 }

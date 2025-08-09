@@ -1,8 +1,12 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Common.Queries;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Tickets.Queries;
-using Accounting.Infrastructure.Data;
+using Accounting.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -10,9 +14,9 @@ namespace Accounting.Application.Features.Tickets.Handlers
 {
     public class GetTicketsQueryHandler : IQueryHandler<GetTicketsQuery, Result<PagedResult<TicketDto>>>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAccountingDbContext _context;
 
-        public GetTicketsQueryHandler(ApplicationDbContext context)
+        public GetTicketsQueryHandler(IAccountingDbContext context)
         {
             _context = context;
         }
@@ -60,7 +64,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     CounterpartyId = ticket.CounterpartyId,
                     CounterpartyName = ticket.Counterparty?.Name ?? "",
                     CreatedAt = ticket.CreatedAt,
-                    ModifiedAt = ticket.ModifiedAt,
+                    ModifiedAt = ticket.UpdatedAt,
                     CancellationReason = ticket.CancellationReason,
                     Items = ticket.Items.Select(item => new TicketItemDto
                     {
@@ -101,20 +105,18 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     }
                 }
 
-                var pagedResult = new PagedResult<TicketDto>
-                {
-                    Items = ticketDtos,
-                    TotalCount = totalCount,
-                    Page = query.Page,
-                    PageSize = query.PageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalCount / query.PageSize)
-                };
+                var pagedResult = new PagedResult<TicketDto>(
+                    ticketDtos,
+                    totalCount,
+                    query.Page,
+                    query.PageSize
+                );
 
                 return Result<PagedResult<TicketDto>>.Success(pagedResult);
             }
             catch (Exception ex)
             {
-                return Result<PagedResult<TicketDto>>.Failure($"Error retrieving tickets: {ex.Message}");
+                return Result.Failure<PagedResult<TicketDto>>($"Error retrieving tickets: {ex.Message}");
             }
         }
 
@@ -206,7 +208,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                 "status" => isDescending ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
                 "type" => isDescending ? query.OrderByDescending(t => t.Type) : query.OrderBy(t => t.Type),
                 "counterparty" => isDescending ? query.OrderByDescending(t => t.Counterparty!.Name) : query.OrderBy(t => t.Counterparty!.Name),
-                "modifiedat" => isDescending ? query.OrderByDescending(t => t.ModifiedAt) : query.OrderBy(t => t.ModifiedAt),
+                "modifiedat" => isDescending ? query.OrderByDescending(t => t.UpdatedAt) : query.OrderBy(t => t.UpdatedAt),
                 _ => isDescending ? query.OrderByDescending(t => t.CreatedAt) : query.OrderBy(t => t.CreatedAt)
             };
         }

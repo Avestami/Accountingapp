@@ -9,7 +9,6 @@ using Accounting.Application.Interfaces;
 using Accounting.Application.Common.Queries;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Vouchers.Queries;
-using Accounting.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Accounting.Application.Features.Vouchers.Handlers

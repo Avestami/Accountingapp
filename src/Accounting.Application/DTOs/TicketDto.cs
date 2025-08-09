@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.DTOs

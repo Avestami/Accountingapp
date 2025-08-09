@@ -1,18 +1,21 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Counterparties.Commands;
 using Accounting.Domain.Entities;
-using Accounting.Infrastructure.Data;
+using Accounting.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Counterparties.Handlers
 {
     public class CreateCounterpartyCommandHandler : ICommandHandler<CreateCounterpartyCommand, Result<CounterpartyDto>>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAccountingDbContext _context;
 
-        public CreateCounterpartyCommandHandler(ApplicationDbContext context)
+        public CreateCounterpartyCommandHandler(IAccountingDbContext context)
         {
             _context = context;
         }
@@ -27,13 +30,13 @@ namespace Accounting.Application.Features.Counterparties.Handlers
 
                 if (existingCounterparty != null)
                 {
-                    return Result<CounterpartyDto>.Failure("Counterparty code already exists");
+                    return Result.Failure<CounterpartyDto>("Counterparty code already exists");
                 }
 
                 // Validate that counterparty is either customer or supplier (or both)
                 if (!command.IsCustomer && !command.IsSupplier)
                 {
-                    return Result<CounterpartyDto>.Failure("Counterparty must be either a customer or supplier");
+                    return Result.Failure<CounterpartyDto>("Counterparty must be either a customer or supplier");
                 }
 
                 var counterparty = new Counterparty
@@ -52,7 +55,7 @@ namespace Accounting.Application.Features.Counterparties.Handlers
                     OpeningBalanceUSD = command.OpeningBalanceUSD,
                     OpeningBalanceEUR = command.OpeningBalanceEUR,
                     OpeningBalanceAED = command.OpeningBalanceAED,
-                    CreditLimit = command.CreditLimit,
+                    CreditLimit = command.CreditLimit ?? 0,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -64,7 +67,7 @@ namespace Accounting.Application.Features.Counterparties.Handlers
             }
             catch (Exception ex)
             {
-                return Result<CounterpartyDto>.Failure($"Error creating counterparty: {ex.Message}");
+                return Result.Failure<CounterpartyDto>($"Error creating counterparty: {ex.Message}");
             }
         }
 
@@ -89,7 +92,7 @@ namespace Accounting.Application.Features.Counterparties.Handlers
                 OpeningBalanceAED = counterparty.OpeningBalanceAED,
                 CreditLimit = counterparty.CreditLimit,
                 CreatedAt = counterparty.CreatedAt,
-                ModifiedAt = counterparty.ModifiedAt,
+                ModifiedAt = counterparty.UpdatedAt,
                 // Current balances will be calculated by the query handlers
                 CurrentBalanceIRR = counterparty.OpeningBalanceIRR,
                 CurrentBalanceUSD = counterparty.OpeningBalanceUSD,

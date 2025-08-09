@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
+using Accounting.Application.Interfaces;
 
 namespace Accounting.Infrastructure.Data
 {
-    public class AccountingDbContext : DbContext
+    public class AccountingDbContext : DbContext, IAccountingDbContext
     {
         public AccountingDbContext(DbContextOptions<AccountingDbContext> options) : base(options)
         {
@@ -21,8 +22,14 @@ namespace Accounting.Infrastructure.Data
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherEntry> VoucherEntries { get; set; }
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<Counterparty> Counterparties { get; set; }
+        public DbSet<Bank> Banks { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<FxTransaction> FxTransactions { get; set; }
         public DbSet<FxConsumption> FxConsumptions { get; set; }
+        public DbSet<Airline> Airlines { get; set; }
+        public DbSet<Origin> Origins { get; set; }
+        public DbSet<Destination> Destinations { get; set; }
         public DbSet<DocumentNumber> DocumentNumbers { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Report> Reports { get; set; }
@@ -123,18 +130,35 @@ namespace Accounting.Infrastructure.Data
             modelBuilder.Entity<TicketItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
-                entity.Property(e => e.Quantity).HasColumnType("decimal(18,4)");
-                entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
-                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PassengerName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PassengerAge).HasMaxLength(10);
+                entity.Property(e => e.FlightNumber).HasMaxLength(20);
+                entity.Property(e => e.SeatNumber).HasMaxLength(10);
+                entity.Property(e => e.Class).HasMaxLength(20);
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
                 entity.Property(e => e.Notes).HasMaxLength(500);
-                entity.Property(e => e.ReceiptPath).HasMaxLength(500);
+                entity.Property(e => e.Itinerary).HasMaxLength(1000);
                 
                 entity.HasOne(e => e.Ticket)
                     .WithMany(t => t.Items)
                     .HasForeignKey(e => e.TicketId)
                     .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(e => e.Airline)
+                    .WithMany()
+                    .HasForeignKey(e => e.AirlineId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.Origin)
+                    .WithMany()
+                    .HasForeignKey(e => e.OriginId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.Destination)
+                    .WithMany()
+                    .HasForeignKey(e => e.DestinationId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
         

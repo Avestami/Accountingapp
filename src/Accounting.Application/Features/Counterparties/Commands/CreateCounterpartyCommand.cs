@@ -1,8 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using Accounting.Application.Common.Commands;
+using Accounting.Application.Common.Models;
+using Accounting.Application.DTOs;
 
 namespace Accounting.Application.Features.Counterparties.Commands
 {
-    public class CreateCounterpartyCommand
+    public class CreateCounterpartyCommand : ICommand<Result<CounterpartyDto>>
     {
         [Required]
         [StringLength(200)]

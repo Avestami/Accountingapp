@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Accounting.Domain.Entities
 {
@@ -13,21 +14,12 @@ namespace Accounting.Domain.Entities
 
         [Required]
         [MaxLength(3)]
-        public string IataCode { get; set; } = string.Empty;
-
-        [MaxLength(4)]
-        public string? IcaoCode { get; set; }
-
-        [MaxLength(500)]
-        public string? Description { get; set; }
-
-        public bool IsActive { get; set; } = true;
+        public string Code { get; set; } = string.Empty;
 
         [MaxLength(100)]
         public string? Country { get; set; }
 
-        [MaxLength(200)]
-        public string? Website { get; set; }
+        public bool IsActive { get; set; } = true;
 
         // Navigation properties
         public virtual ICollection<TicketItem> TicketItems { get; set; } = new List<TicketItem>();
