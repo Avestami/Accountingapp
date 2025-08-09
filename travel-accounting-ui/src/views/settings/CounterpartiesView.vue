@@ -35,7 +35,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="settingsStore.loading" class="flex justify-center items-center py-12">
+    <div v-if="counterpartyStore.loading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       <span class="mr-3 text-gray-600">در حال بارگذاری...</span>
     </div>
@@ -113,28 +113,28 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useCounterpartyStore } from '../../stores/counterpartyStore'
 
 export default {
   name: 'CounterpartiesView',
   setup() {
-    const settingsStore = useSettingsStore()
+    const counterpartyStore = useCounterpartyStore()
+    
+    // State
     const searchQuery = ref('')
     const typeFilter = ref('')
     const statusFilter = ref('')
-    
-    onMounted(() => {
-      settingsStore.loadAllSettings()
-    })
 
+    // Computed
     const filteredCounterparties = computed(() => {
-      let filtered = settingsStore.counterparties
+      let filtered = counterpartyStore.counterparties
       
       if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
         filtered = filtered.filter(counterparty => 
-          counterparty.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          counterparty.code.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          counterparty.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+          counterparty.name.toLowerCase().includes(query) ||
+          counterparty.code?.toLowerCase().includes(query) ||
+          counterparty.email?.toLowerCase().includes(query)
         )
       }
       
@@ -142,8 +142,8 @@ export default {
         filtered = filtered.filter(counterparty => counterparty.type === typeFilter.value)
       }
       
-      if (statusFilter.value !== '') {
-        const isActive = statusFilter.value === 'true'
+      if (statusFilter.value) {
+        const isActive = statusFilter.value === 'active'
         filtered = filtered.filter(counterparty => counterparty.isActive === isActive)
       }
       
@@ -153,21 +153,21 @@ export default {
     const getTypeClass = (type) => {
       return {
         'bg-blue-100 text-blue-800': type === 'buyer',
-        'bg-orange-100 text-orange-800': type === 'supplier'
+        'bg-green-100 text-green-800': type === 'supplier'
       }
     }
 
     const getTypeLabel = (type) => {
       const labels = {
         'buyer': 'خریدار',
-        'supplier': 'تأمین‌کننده'
+        'supplier': 'تامین‌کننده'
       }
       return labels[type] || type
     }
 
     const getStatusClass = (isActive) => {
       return isActive 
-        ? 'bg-green-100 text-green-800'
+        ? 'bg-green-100 text-green-800' 
         : 'bg-red-100 text-red-800'
     }
 
@@ -187,28 +187,31 @@ export default {
       }).format(amount)
     }
 
+    // Methods
     const createCounterparty = async () => {
       const name = prompt('نام طرف حساب را وارد کنید:')
-      if (name) {
+      if (name && name.trim()) {
         const code = prompt('کد طرف حساب را وارد کنید:')
-        if (code) {
+        if (code && code.trim()) {
           const type = prompt('نوع طرف حساب را انتخاب کنید (buyer/supplier):', 'buyer')
-          if (type === 'buyer' || type === 'supplier') {
-            const email = prompt('ایمیل را وارد کنید:')
-            if (email) {
-              const phone = prompt('شماره تلفن را وارد کنید:')
-              if (phone) {
-                await settingsStore.createCounterparty({
-                  name,
-                  code,
-                  type,
-                  email,
-                  phone,
-                  balance: 0,
-                  isActive: true
-                })
-                alert('طرف حساب با موفقیت ایجاد شد')
-              }
+          if (type && ['buyer', 'supplier'].includes(type.toLowerCase())) {
+            const email = prompt('ایمیل را وارد کنید (اختیاری):')
+            const phone = prompt('شماره تلفن را وارد کنید (اختیاری):')
+            const address = prompt('آدرس را وارد کنید (اختیاری):')
+            
+            try {
+              await counterpartyStore.createCounterparty({
+                name: name.trim(),
+                code: code.trim().toUpperCase(),
+                type: type.toLowerCase(),
+                email: email?.trim() || null,
+                phone: phone?.trim() || null,
+                address: address?.trim() || null,
+                isActive: true
+              })
+              alert('طرف حساب با موفقیت ایجاد شد')
+            } catch (error) {
+              alert('خطا در ایجاد طرف حساب: ' + error.message)
             }
           } else {
             alert('نوع طرف حساب باید buyer یا supplier باشد')
@@ -219,42 +222,56 @@ export default {
 
     const editCounterparty = async (counterparty) => {
       const name = prompt('نام طرف حساب را ویرایش کنید:', counterparty.name)
-      if (name !== null) {
+      if (name && name.trim()) {
         const code = prompt('کد طرف حساب را ویرایش کنید:', counterparty.code)
-        if (code !== null) {
+        if (code && code.trim()) {
           const type = prompt('نوع طرف حساب را ویرایش کنید:', counterparty.type)
-          if (type !== null && (type === 'buyer' || type === 'supplier')) {
-            const email = prompt('ایمیل را ویرایش کنید:', counterparty.email)
-            if (email !== null) {
-              const phone = prompt('شماره تلفن را ویرایش کنید:', counterparty.phone)
-              if (phone !== null) {
-                await settingsStore.updateCounterparty(counterparty.id, {
-                  ...counterparty,
-                  name,
-                  code,
-                  type,
-                  email,
-                  phone
-                })
-                alert('طرف حساب با موفقیت ویرایش شد')
-              }
+          if (type && ['buyer', 'supplier'].includes(type.toLowerCase())) {
+            const email = prompt('ایمیل را ویرایش کنید:', counterparty.email || '')
+            const phone = prompt('شماره تلفن را ویرایش کنید:', counterparty.phone || '')
+            const address = prompt('آدرس را ویرایش کنید:', counterparty.address || '')
+            const isActive = confirm('آیا این طرف حساب فعال باشد؟')
+            
+            try {
+              await counterpartyStore.updateCounterparty(counterparty.id, {
+                ...counterparty,
+                name: name.trim(),
+                code: code.trim().toUpperCase(),
+                type: type.toLowerCase(),
+                email: email?.trim() || null,
+                phone: phone?.trim() || null,
+                address: address?.trim() || null,
+                isActive
+              })
+              alert('طرف حساب با موفقیت ویرایش شد')
+            } catch (error) {
+              alert('خطا در ویرایش طرف حساب: ' + error.message)
             }
-          } else if (type !== null) {
+          } else {
             alert('نوع طرف حساب باید buyer یا supplier باشد')
           }
         }
       }
     }
 
-    const deleteCounterparty = async (id) => {
+    const deleteCounterparty = async (counterpartyId) => {
       if (confirm('آیا از حذف این طرف حساب اطمینان دارید؟')) {
-        await settingsStore.deleteCounterparty(id)
-        alert('طرف حساب با موفقیت حذف شد')
+        try {
+          await counterpartyStore.deleteCounterparty(counterpartyId)
+          alert('طرف حساب با موفقیت حذف شد')
+        } catch (error) {
+          alert('خطا در حذف طرف حساب: ' + error.message)
+        }
       }
     }
 
+    // Lifecycle
+    onMounted(() => {
+      counterpartyStore.getCounterparties()
+    })
+
     return {
-      settingsStore,
+      counterpartyStore,
       searchQuery,
       typeFilter,
       statusFilter,

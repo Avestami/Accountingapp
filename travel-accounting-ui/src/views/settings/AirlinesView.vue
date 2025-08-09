@@ -30,7 +30,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="settingsStore.loading" class="flex justify-center items-center py-12">
+    <div v-if="airlineStore.loading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       <span class="mr-3 text-gray-600">در حال بارگذاری...</span>
     </div>
@@ -100,9 +100,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useAirlineStore } from '@/stores/airlineStore'
 
-const settingsStore = useSettingsStore()
+const airlineStore = useAirlineStore()
 
 // State
 const searchQuery = ref('')
@@ -110,19 +110,19 @@ const statusFilter = ref('')
 
 // Load data on component mount
 onMounted(async () => {
-  await settingsStore.loadAllSettings()
+  await airlineStore.getAirlines()
 })
 
 // Computed properties
 const filteredAirlines = computed(() => {
-  let filtered = settingsStore.airlines
+  let filtered = airlineStore.airlines
   
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(airline => 
       airline.name.toLowerCase().includes(query) ||
       airline.code.toLowerCase().includes(query) ||
-      airline.country.toLowerCase().includes(query)
+      (airline.country && airline.country.toLowerCase().includes(query))
     )
   }
   
@@ -146,22 +146,24 @@ async function createAirline() {
   const name = prompt('نام شرکت هواپیمایی:')
   if (!name) return
   
-  const code = prompt('کد شرکت هواپیمایی:')
-  if (!code) return
+  const code = prompt('کد شرکت هواپیمایی (3 حرف):')
+  if (!code || code.length !== 3) {
+    alert('کد باید دقیقاً 3 حرف باشد')
+    return
+  }
   
-  const country = prompt('کشور:')
-  if (!country) return
+  const country = prompt('کشور (اختیاری):')
   
   try {
-    await settingsStore.createAirline({
+    await airlineStore.createAirline({
       name,
-      code,
-      country,
+      code: code.toUpperCase(),
+      country: country || null,
       isActive: true
     })
     alert('شرکت هواپیمایی با موفقیت ایجاد شد')
   } catch (error) {
-    alert('خطا در ایجاد شرکت هواپیمایی: ' + error.message)
+    alert('خطا در ایجاد شرکت هواپیمایی: ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -169,21 +171,28 @@ async function editAirline(airline) {
   const name = prompt('نام شرکت هواپیمایی:', airline.name)
   if (name === null) return
   
-  const code = prompt('کد شرکت هواپیمایی:', airline.code)
+  const code = prompt('کد شرکت هواپیمایی (3 حرف):', airline.code)
   if (code === null) return
+  if (code.length !== 3) {
+    alert('کد باید دقیقاً 3 حرف باشد')
+    return
+  }
   
-  const country = prompt('کشور:', airline.country)
+  const country = prompt('کشور:', airline.country || '')
   if (country === null) return
   
+  const isActive = confirm('آیا شرکت فعال باشد؟')
+  
   try {
-    await settingsStore.updateAirline(airline.id, {
+    await airlineStore.updateAirline(airline.id, {
       name,
-      code,
-      country
+      code: code.toUpperCase(),
+      country: country || null,
+      isActive
     })
     alert('شرکت هواپیمایی با موفقیت به‌روزرسانی شد')
   } catch (error) {
-    alert('خطا در به‌روزرسانی شرکت هواپیمایی: ' + error.message)
+    alert('خطا در به‌روزرسانی شرکت هواپیمایی: ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -193,10 +202,10 @@ async function deleteAirline(id) {
   }
   
   try {
-    await settingsStore.deleteAirline(id)
+    await airlineStore.deleteAirline(id)
     alert('شرکت هواپیمایی با موفقیت حذف شد')
   } catch (error) {
-    alert('خطا در حذف شرکت هواپیمایی: ' + error.message)
+    alert('خطا در حذف شرکت هواپیمایی: ' + (error.response?.data?.message || error.message))
   }
 }
 </script>

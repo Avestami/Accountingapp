@@ -21,6 +21,8 @@ namespace Accounting.Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
+        public string Company { get; set; } = string.Empty;
+
         // Navigation properties
         public virtual ICollection<TicketItem> TicketItems { get; set; } = new List<TicketItem>();
     }

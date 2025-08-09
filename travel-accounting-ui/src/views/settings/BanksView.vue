@@ -44,16 +44,13 @@
               نام بانک
             </th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              شماره حساب
+              کد SWIFT
             </th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              شبا
+              آدرس
             </th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              ارز
-            </th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              موجودی
+              تلفن
             </th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               وضعیت
@@ -67,19 +64,16 @@
           <tr v-for="bank in filteredBanks" :key="bank.id">
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm font-medium text-gray-900">{{ bank.name }}</div>
-              <div class="text-sm text-gray-500">{{ bank.branch }}</div>
+              <div class="text-sm text-gray-500">{{ bank.website || '-' }}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ bank.accountNumber }}
+              {{ bank.swiftCode || '-' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ bank.iban }}
+              {{ bank.address || '-' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ bank.currency }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ formatCurrency(bank.balance, bank.currency) }}
+              {{ bank.phone || '-' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span :class="getStatusClass(bank.isActive)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
@@ -107,126 +101,117 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useBankStore } from '@/stores/bankStore'
 
-export default {
-  name: 'BanksView',
-  setup() {
-    const settingsStore = useSettingsStore()
-    const searchQuery = ref('')
-    const statusFilter = ref('')
-    
-    onMounted(() => {
-      settingsStore.loadAllSettings()
+const bankStore = useBankStore()
+
+// State
+const searchQuery = ref('')
+const statusFilter = ref('')
+
+// Load data on component mount
+onMounted(async () => {
+  await bankStore.getBanks()
+})
+
+// Computed properties
+const filteredBanks = computed(() => {
+  let filtered = bankStore.banks
+  
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(bank => 
+      bank.name.toLowerCase().includes(query) ||
+      (bank.swiftCode && bank.swiftCode.toLowerCase().includes(query)) ||
+      (bank.address && bank.address.toLowerCase().includes(query))
+    )
+  }
+  
+  if (statusFilter.value !== '') {
+    const isActive = statusFilter.value === 'true'
+    filtered = filtered.filter(bank => bank.isActive === isActive)
+  }
+  
+  return filtered
+})
+
+// Methods
+function getStatusClass(isActive) {
+  return {
+    'bg-green-100 text-green-800': isActive,
+    'bg-red-100 text-red-800': !isActive
+  }
+}
+
+async function createBank() {
+  const name = prompt('نام بانک:')
+  if (!name) return
+  
+  const swiftCode = prompt('کد SWIFT (اختیاری):')
+  const address = prompt('آدرس (اختیاری):')
+  const phone = prompt('تلفن (اختیاری):')
+  const website = prompt('وب‌سایت (اختیاری):')
+  
+  try {
+    await bankStore.createBank({
+      name,
+      swiftCode: swiftCode || null,
+      address: address || null,
+      phone: phone || null,
+      website: website || null,
+      isActive: true
     })
+    alert('بانک با موفقیت ایجاد شد')
+  } catch (error) {
+    alert('خطا در ایجاد بانک: ' + (error.response?.data?.message || error.message))
+  }
+}
 
-    const filteredBanks = computed(() => {
-      let filtered = settingsStore.banks
-      
-      if (searchQuery.value) {
-        filtered = filtered.filter(bank => 
-          bank.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          bank.accountNumber.includes(searchQuery.value) ||
-          bank.iban.includes(searchQuery.value)
-        )
-      }
-      
-      if (statusFilter.value !== '') {
-        const isActive = statusFilter.value === 'true'
-        filtered = filtered.filter(bank => bank.isActive === isActive)
-      }
-      
-      return filtered
+async function editBank(bank) {
+  const name = prompt('نام بانک:', bank.name)
+  if (name === null) return
+  
+  const swiftCode = prompt('کد SWIFT:', bank.swiftCode || '')
+  if (swiftCode === null) return
+  
+  const address = prompt('آدرس:', bank.address || '')
+  if (address === null) return
+  
+  const phone = prompt('تلفن:', bank.phone || '')
+  if (phone === null) return
+  
+  const website = prompt('وب‌سایت:', bank.website || '')
+  if (website === null) return
+  
+  const isActive = confirm('آیا بانک فعال باشد؟')
+  
+  try {
+    await bankStore.updateBank(bank.id, {
+      name,
+      swiftCode: swiftCode || null,
+      address: address || null,
+      phone: phone || null,
+      website: website || null,
+      isActive
     })
+    alert('بانک با موفقیت به‌روزرسانی شد')
+  } catch (error) {
+    alert('خطا در به‌روزرسانی بانک: ' + (error.response?.data?.message || error.message))
+  }
+}
 
-    const formatCurrency = (amount, currency) => {
-      return new Intl.NumberFormat('fa-IR', {
-        style: 'currency',
-        currency: currency
-      }).format(amount)
-    }
-
-    const getStatusClass = (isActive) => {
-      return isActive 
-        ? 'bg-green-100 text-green-800'
-        : 'bg-red-100 text-red-800'
-    }
-
-    const createBank = async () => {
-      const name = prompt('نام بانک را وارد کنید:')
-      if (name) {
-        const accountNumber = prompt('شماره حساب را وارد کنید:')
-        if (accountNumber) {
-          const iban = prompt('شماره شبا را وارد کنید:')
-          if (iban) {
-            const currency = prompt('نوع ارز را وارد کنید (IRR, USD, EUR):', 'IRR')
-            if (currency) {
-              const balance = parseFloat(prompt('موجودی اولیه را وارد کنید:', '0'))
-              if (!isNaN(balance)) {
-                await settingsStore.createBank({
-                  name,
-                  accountNumber,
-                  iban,
-                  currency,
-                  balance,
-                  branch: 'شعبه اصلی',
-                  isActive: true
-                })
-                alert('بانک با موفقیت ایجاد شد')
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const editBank = async (bank) => {
-      const name = prompt('نام بانک را ویرایش کنید:', bank.name)
-      if (name !== null) {
-        const accountNumber = prompt('شماره حساب را ویرایش کنید:', bank.accountNumber)
-        if (accountNumber !== null) {
-          const iban = prompt('شماره شبا را ویرایش کنید:', bank.iban)
-          if (iban !== null) {
-            const currency = prompt('نوع ارز را ویرایش کنید:', bank.currency)
-            if (currency !== null) {
-              const balance = parseFloat(prompt('موجودی را ویرایش کنید:', bank.balance.toString()))
-              if (!isNaN(balance)) {
-                await settingsStore.updateBank(bank.id, {
-                  ...bank,
-                  name,
-                  accountNumber,
-                  iban,
-                  currency,
-                  balance
-                })
-                alert('بانک با موفقیت ویرایش شد')
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const deleteBank = async (bankId) => {
-      if (confirm('آیا از حذف این بانک اطمینان دارید؟')) {
-        await settingsStore.deleteBank(bankId)
-        alert('بانک با موفقیت حذف شد')
-      }
-    }
-
-    return {
-      settingsStore,
-      searchQuery,
-      statusFilter,
-      filteredBanks,
-      formatCurrency,
-      getStatusClass,
-      createBank,
-      editBank,
-      deleteBank
-    }
+async function deleteBank(id) {
+  if (!confirm('آیا از حذف این بانک اطمینان دارید؟')) {
+    return
+  }
+  
+  try {
+    await bankStore.deleteBank(id)
+    alert('بانک با موفقیت حذف شد')
+  } catch (error) {
+    alert('خطا در حذف بانک: ' + (error.response?.data?.message || error.message))
   }
 }
 </script>

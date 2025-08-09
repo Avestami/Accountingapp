@@ -1,17 +1,17 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Queries;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Finance.Queries;
 using Accounting.Application.Interfaces;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
 {
-    public class GetCostsQueryHandler : IRequestHandler<GetCostsQuery, Result<PagedResult<CostDto>>>
+    public class GetCostsQueryHandler : IQueryHandler<GetCostsQuery, Result<PagedResult<CostDto>>>
     {
         private readonly IAccountingDbContext _context;
         private readonly IMapper _mapper;

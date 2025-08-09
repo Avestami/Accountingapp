@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 
 namespace Accounting.Application.Features.Finance.Commands
@@ -20,7 +21,7 @@ namespace Accounting.Application.Features.Finance.Commands
         All
     }
 
-    public class ExportFinanceDataCommand : IRequest<Result<byte[]>>
+    public class ExportFinanceDataCommand : ICommand<Result<byte[]>>
     {
         [Required]
         public ExportFormat Format { get; set; }

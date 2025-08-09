@@ -1,14 +1,14 @@
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
 {
-    public class DeleteCostCommandHandler : IRequestHandler<DeleteCostCommand, Result<bool>>
+    public class DeleteCostCommandHandler : ICommandHandler<DeleteCostCommand, Result<bool>>
     {
         private readonly IAccountingDbContext _context;
 

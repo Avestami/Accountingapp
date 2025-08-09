@@ -1,18 +1,20 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
+using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Interfaces;
 using Accounting.Application.Services;
 using Accounting.Domain.Entities;
+using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Finance.Commands
 {
-    public class CreateCostCommandHandler : IRequestHandler<CreateCostCommand, Result<CostDto>>
+    public class CreateCostCommandHandler : ICommandHandler<CreateCostCommand, Result<CostDto>>
     {
         private readonly IAccountingDbContext _context;
         private readonly IMapper _mapper;

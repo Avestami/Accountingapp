@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Domain.Entities;
 
 namespace Accounting.Application.Features.Finance.Commands
 {
-    public class CreateIncomeCommand : IRequest<Result<IncomeDto>>
+    public class CreateIncomeCommand : ICommand<Result<IncomeDto>>
     {
         [Required]
         public DateTime Date { get; set; }

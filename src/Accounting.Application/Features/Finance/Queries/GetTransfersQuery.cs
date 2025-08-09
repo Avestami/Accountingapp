@@ -1,11 +1,12 @@
 using System;
 using MediatR;
+using Accounting.Application.Common.Queries;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 
 namespace Accounting.Application.Features.Finance.Queries
 {
-    public class GetTransfersQuery : IRequest<Result<PagedResult<TransferDto>>>
+    public class GetTransfersQuery : IQuery<Result<PagedResult<TransferDto>>>
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

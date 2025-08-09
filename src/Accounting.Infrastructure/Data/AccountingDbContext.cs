@@ -92,7 +92,13 @@ namespace Accounting.Infrastructure.Data
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Company).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Role).HasConversion<int>();
+                entity.Property(e => e.IsActive).IsRequired();
+                entity.Property(e => e.LastLoginAt);
+                entity.Property(e => e.RefreshToken).HasMaxLength(500);
+                entity.Property(e => e.RefreshTokenExpiryTime);
+                entity.Property(e => e.ProfilePicture).HasMaxLength(500);
                 
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
@@ -383,6 +389,7 @@ namespace Accounting.Infrastructure.Data
                     Email = "admin@accounting.com",
                     FirstName = "System",
                     LastName = "Administrator",
+                    Company = "demo",
                     PasswordHash = "$2a$11$8K1p/a0dURXAMcGe71sS1.E7dvFECOlHHQ4ZaBbQ4QjQvgs1XlqRG", // "admin123"
                     Role = UserRole.Admin,
                     IsActive = true,

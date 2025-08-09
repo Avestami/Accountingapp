@@ -68,6 +68,13 @@ namespace Accounting.API
             // Register Query Handlers
             services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Dashboard.Queries.GetDashboardStatsQuery, Accounting.Application.Common.Models.Result<Accounting.Application.Features.Dashboard.Queries.DashboardStatsDto>>, Accounting.Application.Features.Dashboard.Queries.GetDashboardStatsQueryHandler>();
 
+            // Register Airlines Handlers
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Airlines.Commands.CreateAirlineCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.AirlineDto>>, Accounting.Application.Features.Airlines.Handlers.CreateAirlineCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Airlines.Commands.UpdateAirlineCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.AirlineDto>>, Accounting.Application.Features.Airlines.Handlers.UpdateAirlineCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Airlines.Commands.DeleteAirlineCommand, Accounting.Application.Common.Models.Result<bool>>, Accounting.Application.Features.Airlines.Handlers.DeleteAirlineCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Airlines.Queries.GetAirlinesQuery, Accounting.Application.Common.Models.Result<Accounting.Application.Common.Models.PagedResult<Accounting.Application.DTOs.AirlineDto>>>, Accounting.Application.Features.Airlines.Handlers.GetAirlinesQueryHandler>();
+            services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Airlines.Queries.GetAirlineByIdQuery, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.AirlineDto>>, Accounting.Application.Features.Airlines.Handlers.GetAirlineByIdQueryHandler>();
+
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
 

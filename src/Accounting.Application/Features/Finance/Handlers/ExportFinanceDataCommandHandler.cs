@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
 {
-    public class ExportFinanceDataCommandHandler : IRequestHandler<ExportFinanceDataCommand, Result<byte[]>>
+    public class ExportFinanceDataCommandHandler : ICommandHandler<ExportFinanceDataCommand, Result<byte[]>>
     {
         private readonly IAccountingDbContext _context;
 

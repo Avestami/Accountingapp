@@ -36,7 +36,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="settingsStore.loading" class="bg-white rounded-lg shadow p-8 text-center">
+    <div v-if="locationStore.loading" class="bg-white rounded-lg shadow p-8 text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
       <p class="text-gray-600">در حال بارگذاری...</p>
     </div>
@@ -111,27 +111,27 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
+import { useLocationStore } from '../../stores/locationStore'
 
 export default {
   name: 'LocationsView',
   setup() {
-    const settingsStore = useSettingsStore()
+    const locationStore = useLocationStore()
+    
+    // State
     const searchQuery = ref('')
     const typeFilter = ref('')
     const statusFilter = ref('')
-    
-    onMounted(() => {
-      settingsStore.loadAllSettings()
-    })
 
+    // Computed
     const filteredLocations = computed(() => {
-      let filtered = settingsStore.locations
+      let filtered = locationStore.locations
       
       if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
         filtered = filtered.filter(location => 
-          location.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          location.code.toLowerCase().includes(searchQuery.value.toLowerCase())
+          location.name.toLowerCase().includes(query) ||
+          location.code?.toLowerCase().includes(query)
         )
       }
       
@@ -139,8 +139,8 @@ export default {
         filtered = filtered.filter(location => location.type === typeFilter.value)
       }
       
-      if (statusFilter.value !== '') {
-        const isActive = statusFilter.value === 'true'
+      if (statusFilter.value) {
+        const isActive = statusFilter.value === 'active'
         filtered = filtered.filter(location => location.isActive === isActive)
       }
       
@@ -166,69 +166,61 @@ export default {
 
     const getStatusClass = (isActive) => {
       return isActive 
-        ? 'bg-green-100 text-green-800'
+        ? 'bg-green-100 text-green-800' 
         : 'bg-red-100 text-red-800'
     }
 
+    // Methods
     const createLocation = async () => {
       const name = prompt('نام مکان را وارد کنید:')
-      if (name) {
-        const code = prompt('کد مکان را وارد کنید:')
-        if (code) {
-          const type = prompt('نوع مکان را انتخاب کنید (country/city/airport):', 'city')
-          if (type === 'country' || type === 'city' || type === 'airport') {
-            try {
-              const newLocation = {
-                name,
-                code,
-                type,
-                parentId: null,
-                parentName: null,
-                isActive: true
-              }
-              
-              await settingsStore.createLocation(newLocation)
-              alert('مکان با موفقیت ایجاد شد')
-            } catch (error) {
-              alert('خطا در ایجاد مکان: ' + error.message)
-            }
-          } else {
-            alert('نوع مکان باید country، city یا airport باشد')
+      if (name && name.trim()) {
+        const type = prompt('نوع مکان را وارد کنید (country/city/airport):')
+        if (type && ['country', 'city', 'airport'].includes(type.toLowerCase())) {
+          const code = prompt('کد مکان را وارد کنید (اختیاری):')
+          const parentId = type !== 'country' ? prompt('شناسه والد را وارد کنید (اختیاری):') : null
+          
+          try {
+            await locationStore.createLocation({
+              name: name.trim(),
+              type: type.toLowerCase(),
+              code: code?.trim() || null,
+              parentId: parentId ? parseInt(parentId) : null,
+              isActive: true
+            })
+            alert('مکان با موفقیت ایجاد شد')
+          } catch (error) {
+            alert('خطا در ایجاد مکان: ' + error.message)
           }
+        } else {
+          alert('نوع مکان باید country، city یا airport باشد')
         }
       }
     }
 
     const editLocation = async (location) => {
       const name = prompt('نام مکان را ویرایش کنید:', location.name)
-      if (name !== null) {
-        const code = prompt('کد مکان را ویرایش کنید:', location.code)
-        if (code !== null) {
-          const type = prompt('نوع مکان را ویرایش کنید:', location.type)
-          if (type !== null && (type === 'country' || type === 'city' || type === 'airport')) {
-            try {
-              const updatedData = {
-                name,
-                code,
-                type
-              }
-              
-              await settingsStore.updateLocation(location.id, updatedData)
-              alert('مکان با موفقیت ویرایش شد')
-            } catch (error) {
-              alert('خطا در ویرایش مکان: ' + error.message)
-            }
-          } else if (type !== null) {
-            alert('نوع مکان باید country، city یا airport باشد')
-          }
+      if (name && name.trim()) {
+        const code = prompt('کد مکان را ویرایش کنید:', location.code || '')
+        const isActive = confirm('آیا این مکان فعال باشد؟')
+        
+        try {
+          await locationStore.updateLocation(location.id, {
+            ...location,
+            name: name.trim(),
+            code: code?.trim() || null,
+            isActive
+          })
+          alert('مکان با موفقیت ویرایش شد')
+        } catch (error) {
+          alert('خطا در ویرایش مکان: ' + error.message)
         }
       }
     }
 
-    const deleteLocation = async (location) => {
-      if (confirm(`آیا از حذف مکان "${location.name}" اطمینان دارید؟`)) {
+    const deleteLocation = async (locationId) => {
+      if (confirm('آیا از حذف این مکان اطمینان دارید؟')) {
         try {
-          await settingsStore.deleteLocation(location.id)
+          await locationStore.deleteLocation(locationId)
           alert('مکان با موفقیت حذف شد')
         } catch (error) {
           alert('خطا در حذف مکان: ' + error.message)
@@ -236,8 +228,13 @@ export default {
       }
     }
 
+    // Lifecycle
+    onMounted(() => {
+      locationStore.getLocations()
+    })
+
     return {
-      settingsStore,
+      locationStore,
       searchQuery,
       typeFilter,
       statusFilter,

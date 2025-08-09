@@ -1,12 +1,13 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 
 namespace Accounting.Application.Features.Finance.Commands
 {
-    public class CreateTransferCommand : IRequest<Result<TransferDto>>
+    public class CreateTransferCommand : ICommand<Result<TransferDto>>
     {
         [Required]
         public DateTime Date { get; set; }

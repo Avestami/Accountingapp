@@ -1,12 +1,13 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Accounting.Application.Common.Queries;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 
 namespace Accounting.Application.Features.Finance.Queries
 {
-    public class GetIncomesQuery : IRequest<Result<PagedResult<IncomeDto>>>
+    public class GetIncomesQuery : IQuery<Result<PagedResult<IncomeDto>>>
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

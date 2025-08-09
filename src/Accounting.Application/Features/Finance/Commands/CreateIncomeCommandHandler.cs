@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Interfaces;
@@ -12,7 +12,7 @@ using Accounting.Domain.Entities;
 
 namespace Accounting.Application.Features.Finance.Commands
 {
-    public class CreateIncomeCommandHandler : IRequestHandler<CreateIncomeCommand, Result<IncomeDto>>
+    public class CreateIncomeCommandHandler : ICommandHandler<CreateIncomeCommand, Result<IncomeDto>>
     {
         private readonly IAccountingDbContext _context;
         private readonly IMapper _mapper;

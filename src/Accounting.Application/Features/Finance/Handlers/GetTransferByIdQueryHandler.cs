@@ -1,15 +1,15 @@
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Queries;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Finance.Queries;
 using Accounting.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
 {
-    public class GetTransferByIdQueryHandler : IRequestHandler<GetTransferByIdQuery, Result<TransferDto>>
+    public class GetTransferByIdQueryHandler : IQueryHandler<GetTransferByIdQuery, Result<TransferDto>>
     {
         private readonly IAccountingDbContext _context;
 

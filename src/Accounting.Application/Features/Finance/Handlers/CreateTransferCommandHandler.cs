@@ -1,18 +1,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Interfaces;
 using Accounting.Application.Services;
 using Accounting.Domain.Entities;
+using Accounting.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
 {
-    public class CreateTransferCommandHandler : IRequestHandler<CreateTransferCommand, Result<TransferDto>>
+    public class CreateTransferCommandHandler : ICommandHandler<CreateTransferCommand, Result<TransferDto>>
     {
         private readonly IAccountingDbContext _context;
         private readonly IDocumentNumberService _documentNumberService;
