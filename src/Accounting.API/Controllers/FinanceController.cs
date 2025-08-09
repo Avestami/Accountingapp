@@ -129,14 +129,26 @@ namespace Accounting.API.Controllers
         }
 
         /// <summary>
-        /// Get transfer by ID (placeholder)
+        /// Get transfer by ID
         /// </summary>
         [HttpGet("transfers/{id}")]
         [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetTransfer(int id)
         {
-            // TODO: Implement GetTransferByIdQuery
-            return Ok(new { id, message = "Transfer details will be implemented" });
+            var query = new GetTransferByIdQuery 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo" 
+            };
+            
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Error);
+            }
+            
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -212,14 +224,41 @@ namespace Accounting.API.Controllers
         }
 
         /// <summary>
-        /// Get all transfers with pagination (placeholder)
+        /// Get all transfers
         /// </summary>
         [HttpGet("transfers")]
         [Permission(Permissions.FinanceView)]
-        public async Task<IActionResult> GetTransfers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetTransfers(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? currency = null,
+            [FromQuery] int? fromAccountId = null,
+            [FromQuery] int? toAccountId = null,
+            [FromQuery] string? searchTerm = null)
         {
-            // TODO: Implement GetTransfersQuery
-            return Ok(new { page, pageSize, message = "Transfers list will be implemented" });
+            var query = new GetTransfersQuery
+            {
+                Page = page,
+                PageSize = pageSize,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Currency = currency,
+                FromAccountId = fromAccountId,
+                ToAccountId = toAccountId,
+                SearchTerm = searchTerm,
+                Company = User.FindFirst("company")?.Value ?? "demo"
+            };
+            
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -257,6 +296,51 @@ namespace Accounting.API.Controllers
             };
 
             return File(result.Value, contentType, $"{fileName}{fileExtension}");
+        }
+        /// <summary>
+        /// Delete a cost
+        /// </summary>
+        [HttpDelete("costs/{id}")]
+        [Permission(Permissions.FinanceEdit)]
+        public async Task<IActionResult> DeleteCost(int id)
+        {
+            var command = new DeleteCostCommand 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo" 
+            };
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            
+            return Ok(new { message = "Cost deleted successfully" });
+        }
+
+        /// <summary>
+        /// Delete an income
+        /// </summary>
+        [HttpDelete("incomes/{id}")]
+        [Permission(Permissions.FinanceEdit)]
+        public async Task<IActionResult> DeleteIncome(int id)
+        {
+            var command = new DeleteIncomeCommand 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo" 
+            };
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            
+            return Ok(new { message = "Income deleted successfully" });
         }
     }
 }

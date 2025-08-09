@@ -53,6 +53,7 @@ namespace Accounting.Infrastructure.Data
             ConfigureAccount(modelBuilder);
             ConfigureFxTransaction(modelBuilder);
             ConfigureFxConsumption(modelBuilder);
+            ConfigureTransfer(modelBuilder);
             ConfigureDocumentNumber(modelBuilder);
             ConfigureAuditLog(modelBuilder);
             ConfigureReport(modelBuilder);
@@ -278,6 +279,36 @@ namespace Accounting.Infrastructure.Data
                     .WithMany(f => f.Consumptions)
                     .HasForeignKey(e => e.FxTransactionId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+        }
+        
+        private void ConfigureTransfer(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Transfer>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
+                entity.Property(e => e.ExchangeRate).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.FeeAmount).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.Reference).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.Company).IsRequired().HasMaxLength(50);
+                
+                entity.HasOne(e => e.FromBankAccount)
+                    .WithMany()
+                    .HasForeignKey(e => e.FromBankAccountId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.HasOne(e => e.ToBankAccount)
+                    .WithMany()
+                    .HasForeignKey(e => e.ToBankAccountId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                    
+                entity.HasIndex(e => e.DocumentNumber).IsUnique();
             });
         }
         

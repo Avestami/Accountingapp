@@ -44,7 +44,7 @@ services:
     depends_on:
       - api
     ports:
-      - "5678:80"
+      - "8008:80"
     networks:
       - accounting-network
     restart: unless-stopped
