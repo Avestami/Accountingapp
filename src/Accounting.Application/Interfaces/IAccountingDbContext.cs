@@ -17,6 +17,12 @@ namespace Accounting.Application.Interfaces
         DbSet<Bank> Banks { get; set; }
         DbSet<BankAccount> BankAccounts { get; set; }
         DbSet<FxTransaction> FxTransactions { get; set; }
+        DbSet<FxConsumption> FxConsumptions { get; set; }
+        DbSet<Cost> Costs { get; set; }
+        DbSet<Income> Incomes { get; set; }
+        DbSet<Transfer> Transfers { get; set; }
+        DbSet<LedgerEntry> LedgerEntries { get; set; }
+        DbSet<DocumentNumber> DocumentNumbers { get; set; }
         DbSet<Airline> Airlines { get; set; }
         DbSet<Origin> Origins { get; set; }
         DbSet<Destination> Destinations { get; set; }

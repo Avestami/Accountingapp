@@ -1,35 +1,43 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Accounting.Domain.Entities
 {
+    [Table("FxConsumptions")]
     public class FxConsumption : BaseEntity
     {
-        public decimal Amount { get; set; }
-        public decimal ExchangeRate { get; set; }
-        public decimal GainLoss { get; set; }
-        public DateTime ConsumptionDate { get; set; }
-        
-        // Foreign Keys
-        public int BuyTransactionId { get; set; }
-        public int SellTransactionId { get; set; }
-        
-        // Navigation Properties
-        public virtual FxTransaction BuyTransaction { get; set; }
-        public virtual FxTransaction SellTransaction { get; set; }
-        
+        [Required]
+        public int FxTransactionId { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ConsumedAmount { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal ConsumedRate { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal ConsumedCost { get; set; }
+
+        [Required]
+        public DateTime Date { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Company { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? Reference { get; set; }
+
+        // Navigation properties
+        public virtual FxTransaction FxTransaction { get; set; } = null!;
+
         public FxConsumption()
         {
-            ConsumptionDate = DateTime.UtcNow;
-        }
-        
-        public void CalculateGainLoss()
-        {
-            // Calculate FX gain/loss based on the difference between buy and sell rates
-            var buyRate = BuyTransaction.ExchangeRate;
-            var sellRate = SellTransaction.ExchangeRate;
-            
-            // Gain/Loss = (Sell Rate - Buy Rate) * Amount
-            GainLoss = (sellRate - buyRate) * Amount;
+            Date = DateTime.UtcNow;
         }
     }
 }

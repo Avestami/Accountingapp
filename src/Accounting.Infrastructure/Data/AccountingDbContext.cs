@@ -27,6 +27,10 @@ namespace Accounting.Infrastructure.Data
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<FxTransaction> FxTransactions { get; set; }
         public DbSet<FxConsumption> FxConsumptions { get; set; }
+        public DbSet<Cost> Costs { get; set; }
+        public DbSet<Income> Incomes { get; set; }
+        public DbSet<Transfer> Transfers { get; set; }
+        public DbSet<LedgerEntry> LedgerEntries { get; set; }
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Origin> Origins { get; set; }
         public DbSet<Destination> Destinations { get; set; }

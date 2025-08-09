@@ -54,6 +54,7 @@ namespace Accounting.API
 
             // Register services
             services.AddScoped<IDocumentNumberService, DocumentNumberService>();
+            services.AddScoped<IFxFifoService, FxFifoService>();
 
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
