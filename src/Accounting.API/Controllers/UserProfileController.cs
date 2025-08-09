@@ -36,26 +36,35 @@ namespace Accounting.API.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var username = GetCurrentUsername();
-                
-                // Mock user profile data - in real app, query from database
-                var userProfile = new
+                var query = new Accounting.Application.Features.Users.Queries.GetUserProfileQuery
                 {
-                    id = userId,
-                    username = username,
-                    firstName = username == "admin" ? "مدیر" : "کاربر",
-                    lastName = username == "admin" ? "سیستم" : "عادی",
-                    fullName = username == "admin" ? "مدیر سیستم" : "کاربر عادی",
-                    email = $"{username}@travel-accounting.com",
-                    role = username == "admin" ? "admin" : "user",
+                    UserId = userId
+                };
+
+                var userProfile = await _mediator.Send(query);
+                
+                if (userProfile == null)
+                {
+                    return NotFound(new { success = false, error = "کاربر یافت نشد" });
+                }
+
+                var response = new
+                {
+                    id = userProfile.Id,
+                    username = GetCurrentUsername(),
+                    firstName = userProfile.FirstName,
+                    lastName = userProfile.LastName,
+                    fullName = $"{userProfile.FirstName} {userProfile.LastName}".Trim(),
+                    email = userProfile.Email,
+                    role = GetCurrentUserRole(),
                     company = "demo",
-                    profilePicture = GetUserProfilePicture(userId),
+                    profilePicture = userProfile.ProfilePicture,
                     isActive = true,
                     createdAt = DateTime.UtcNow.AddDays(-30),
                     lastLoginAt = DateTime.UtcNow
                 };
 
-                return Ok(new { success = true, data = userProfile });
+                return Ok(new { success = true, data = response });
             }
             catch (Exception ex)
             {
@@ -87,24 +96,40 @@ namespace Accounting.API.Controllers
                     return BadRequest(new { success = false, error = "ایمیل الزامی است" });
                 }
 
-                // In real app, update database
-                var updatedProfile = new
+                var command = new Accounting.Application.Features.Users.Commands.UpdateUserProfileCommand
                 {
-                    id = userId,
-                    username = GetCurrentUsername(),
-                    firstName = request.FirstName,
-                    lastName = request.LastName,
-                    fullName = $"{request.FirstName} {request.LastName}",
-                    email = request.Email,
-                    role = GetCurrentUserRole(),
-                    company = "demo",
-                    profilePicture = GetUserProfilePicture(userId),
-                    isActive = true,
-                    createdAt = DateTime.UtcNow.AddDays(-30),
-                    lastLoginAt = DateTime.UtcNow
+                    UserId = userId,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email
                 };
 
-                return Ok(new { success = true, data = updatedProfile });
+                var result = await _mediator.Send(command);
+                
+                if (result.IsSuccess)
+                {
+                    var updatedProfile = new
+                    {
+                        id = result.Value.Id,
+                        username = GetCurrentUsername(),
+                        firstName = result.Value.FirstName,
+                        lastName = result.Value.LastName,
+                        fullName = $"{result.Value.FirstName} {result.Value.LastName}".Trim(),
+                        email = result.Value.Email,
+                        role = GetCurrentUserRole(),
+                        company = "demo",
+                        profilePicture = result.Value.ProfilePicture,
+                        isActive = true,
+                        createdAt = DateTime.UtcNow.AddDays(-30),
+                        lastLoginAt = DateTime.UtcNow
+                    };
+
+                    return Ok(new { success = true, data = updatedProfile });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, error = result.Error });
+                }
             }
             catch (Exception ex)
             {
@@ -191,46 +216,37 @@ namespace Accounting.API.Controllers
                 }
 
                 var userId = GetCurrentUserId();
-                var uploadsPath = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads", "profile-pictures");
                 
-                // Create directory if it doesn't exist
-                if (!Directory.Exists(uploadsPath))
+                // Read file data
+                byte[] fileData;
+                using (var memoryStream = new MemoryStream())
                 {
-                    Directory.CreateDirectory(uploadsPath);
+                    await file.CopyToAsync(memoryStream);
+                    fileData = memoryStream.ToArray();
                 }
 
-                // Generate unique filename
-                var fileName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadsPath, fileName);
-
-                // Delete old profile picture if exists
-                var oldPicture = GetUserProfilePicture(userId);
-                if (!string.IsNullOrEmpty(oldPicture))
+                var command = new Accounting.Application.Features.Users.Commands.UploadProfilePictureCommand
                 {
-                    var oldFileName = Path.GetFileName(oldPicture);
-                    var oldFilePath = Path.Combine(uploadsPath, oldFileName);
-                    if (System.IO.File.Exists(oldFilePath))
-                    {
-                        System.IO.File.Delete(oldFilePath);
-                    }
-                }
+                    UserId = userId,
+                    FileName = file.FileName,
+                    ContentType = file.ContentType,
+                    Data = fileData
+                };
 
-                // Save new file
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                var profilePictureUrl = $"/uploads/profile-pictures/{fileName}";
+                var result = await _mediator.Send(command);
                 
-                // In real app, save to database
-                SaveUserProfilePicture(userId, profilePictureUrl);
-
-                return Ok(new { 
-                    success = true, 
-                    data = new { profilePictureUrl },
-                    message = "تصویر پروفایل با موفقیت آپلود شد"
-                });
+                if (result.IsSuccess)
+                {
+                    return Ok(new { 
+                        success = true, 
+                        data = new { profilePictureUrl = $"/uploads/profile-pictures/{result.Value.FileName}" },
+                        message = "تصویر پروفایل با موفقیت آپلود شد"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, error = result.Error });
+                }
             }
             catch (Exception ex)
             {
@@ -245,30 +261,25 @@ namespace Accounting.API.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var profilePicture = GetUserProfilePicture(userId);
                 
-                if (string.IsNullOrEmpty(profilePicture))
+                var command = new Accounting.Application.Features.Users.Commands.DeleteProfilePictureCommand
                 {
-                    return BadRequest(new { success = false, error = "تصویر پروفایل وجود ندارد" });
-                }
+                    UserId = userId
+                };
 
-                var uploadsPath = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads", "profile-pictures");
-                var fileName = Path.GetFileName(profilePicture);
-                var filePath = Path.Combine(uploadsPath, fileName);
-
-                // Delete file if exists
-                if (System.IO.File.Exists(filePath))
+                var result = await _mediator.Send(command);
+                
+                if (result.IsSuccess)
                 {
-                    System.IO.File.Delete(filePath);
+                    return Ok(new { 
+                        success = true, 
+                        message = "تصویر پروفایل حذف شد"
+                    });
                 }
-
-                // In real app, update database
-                SaveUserProfilePicture(userId, null);
-
-                return Ok(new { 
-                    success = true, 
-                    message = "تصویر پروفایل حذف شد"
-                });
+                else
+                {
+                    return BadRequest(new { success = false, error = result.Error });
+                }
             }
             catch (Exception ex)
             {
@@ -293,27 +304,6 @@ namespace Accounting.API.Controllers
         {
             var roleClaim = User.FindFirst(ClaimTypes.Role);
             return roleClaim?.Value ?? "admin";
-        }
-
-        // Mock storage for profile pictures - in real app, use database
-        private static readonly Dictionary<int, string> _userProfilePictures = new();
-
-        private string GetUserProfilePicture(int userId)
-        {
-            _userProfilePictures.TryGetValue(userId, out var profilePicture);
-            return profilePicture;
-        }
-
-        private void SaveUserProfilePicture(int userId, string profilePictureUrl)
-        {
-            if (string.IsNullOrEmpty(profilePictureUrl))
-            {
-                _userProfilePictures.Remove(userId);
-            }
-            else
-            {
-                _userProfilePictures[userId] = profilePictureUrl;
-            }
         }
     }
 

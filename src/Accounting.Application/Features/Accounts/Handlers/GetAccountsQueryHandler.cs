@@ -60,7 +60,7 @@ namespace Accounting.Application.Features.Accounts.Handlers
                 UpdatedAt = a.UpdatedAt ?? DateTime.MinValue
             }).OrderBy(a => a.AccountCode).ToList();
 
-            return Result<List<AccountDto>>.Success(accountDtos);
+            return Result.Success(accountDtos);
         }
     }
 }

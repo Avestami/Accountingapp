@@ -124,6 +124,52 @@ export const authApi = {
 
 // Finance API
 export const financeApi = {
+  // Costs
+  async getCosts(params = {}) {
+    return apiClient.get('/finance/costs', params)
+  },
+
+  async getCost(id) {
+    return apiClient.get(`/finance/costs/${id}`)
+  },
+
+  async createCost(costData) {
+    return apiClient.post('/finance/costs', costData)
+  },
+
+  // Incomes
+  async getIncomes(params = {}) {
+    return apiClient.get('/finance/incomes', params)
+  },
+
+  async getIncome(id) {
+    return apiClient.get(`/finance/incomes/${id}`)
+  },
+
+  async createIncome(incomeData) {
+    return apiClient.post('/finance/incomes', incomeData)
+  },
+
+  // Transfers
+  async getTransfers(params = {}) {
+    return apiClient.get('/finance/transfers', params)
+  },
+
+  async getTransfer(id) {
+    return apiClient.get(`/finance/transfers/${id}`)
+  },
+
+  async createTransfer(transferData) {
+    return apiClient.post('/finance/transfers', transferData)
+  },
+
+  // Export
+  async exportFinanceData(exportData) {
+    const response = await apiClient.post('/finance/export', exportData)
+    return response
+  },
+
+  // Legacy methods for backward compatibility
   async getTransactions(params = {}) {
     return apiClient.get('/finance/transactions', params)
   },

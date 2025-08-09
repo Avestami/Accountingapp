@@ -155,6 +155,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { financeApi } from '@/services/api'
 
 export default {
   name: 'CostsView',
@@ -169,6 +170,13 @@ export default {
     const dateFrom = ref('')
     const dateTo = ref('')
     const showAddModal = ref(false)
+    const loading = ref(false)
+    const error = ref(null)
+    const pagination = ref({
+      page: 1,
+      pageSize: 10,
+      total: 0
+    })
     
     // Computed properties
     const totalCosts = computed(() => {
@@ -209,33 +217,101 @@ export default {
     
     // Methods
     const loadCosts = async () => {
-      // Simulate API call
-      costs.value = [
-        {
-          id: 'C001',
-          date: '2024-01-15',
-          description: 'هزینه سوخت خودرو',
-          type: 'operational',
-          amount: 500000,
-          status: 'approved'
-        },
-        {
-          id: 'C002',
-          date: '2024-01-16',
-          description: 'هزینه اجاره دفتر',
-          type: 'administrative',
-          amount: 2000000,
-          status: 'pending'
-        },
-        {
-          id: 'C003',
-          date: '2024-01-17',
-          description: 'هزینه تبلیغات',
-          type: 'marketing',
-          amount: 1500000,
-          status: 'approved'
+      try {
+        loading.value = true
+        error.value = null
+        
+        const params = {
+          page: pagination.value.page,
+          pageSize: pagination.value.pageSize,
+          fromDate: dateFrom.value || undefined,
+          toDate: dateTo.value || undefined,
+          searchTerm: searchQuery.value || undefined
         }
-      ]
+        
+        const response = await financeApi.getCosts(params)
+        
+        if (response.success) {
+          costs.value = response.data.items || []
+          pagination.value.total = response.data.totalCount || 0
+        } else {
+          throw new Error(response.message || 'خطا در بارگذاری هزینه‌ها')
+        }
+      } catch (err) {
+        error.value = err.message || 'خطا در بارگذاری هزینه‌ها'
+        console.error('Error loading costs:', err)
+        
+        // Fallback to mock data for development
+        costs.value = [
+          {
+            id: 'C001',
+            date: '2024-01-15',
+            description: 'هزینه سوخت خودرو',
+            type: 'operational',
+            amount: 500000,
+            status: 'approved'
+          },
+          {
+            id: 'C002',
+            date: '2024-01-16',
+            description: 'هزینه اجاره دفتر',
+            type: 'administrative',
+            amount: 2000000,
+            status: 'pending'
+          },
+          {
+            id: 'C003',
+            date: '2024-01-17',
+            description: 'هزینه تبلیغات',
+            type: 'marketing',
+            amount: 1500000,
+            status: 'approved'
+          }
+        ]
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const createCost = async (costData) => {
+      try {
+        loading.value = true
+        error.value = null
+        
+        const response = await financeApi.createCost(costData)
+        
+        if (response.success) {
+          await loadCosts() // Reload the list
+          showAddModal.value = false
+          return response.data
+        } else {
+          throw new Error(response.message || 'خطا در ایجاد هزینه')
+        }
+      } catch (err) {
+        error.value = err.message || 'خطا در ایجاد هزینه'
+        console.error('Error creating cost:', err)
+        throw err
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const deleteCost = async (costId) => {
+      if (confirm('آیا از حذف این هزینه اطمینان دارید؟')) {
+        try {
+          loading.value = true
+          error.value = null
+          
+          // Note: Delete endpoint not implemented yet, using local removal
+          costs.value = costs.value.filter(cost => cost.id !== costId)
+          
+        } catch (err) {
+          error.value = err.message || 'خطا در حذف هزینه'
+          console.error('Error deleting cost:', err)
+        } finally {
+          loading.value = false
+        }
+      }
     }
     
     const formatCurrency = (amount) => {
@@ -287,12 +363,6 @@ export default {
     const editCost = (cost) => {
       // Navigate to edit page or open modal
       console.log('Edit cost:', cost)
-    }
-    
-    const deleteCost = (costId) => {
-      if (confirm('آیا از حذف این هزینه اطمینان دارید؟')) {
-        costs.value = costs.value.filter(cost => cost.id !== costId)
-      }
     }
     
     // Lifecycle

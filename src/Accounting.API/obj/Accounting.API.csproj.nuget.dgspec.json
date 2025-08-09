@@ -350,19 +350,21 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
-            "BCrypt.Net-Next": {
+            "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[4.0.3, )"
+              "version": "[5.0.17, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[5.0.17, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.8, )"
+              "version": "[5.0.17, )"
+            },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[5.0.0, )"
             }
           },
           "imports": [

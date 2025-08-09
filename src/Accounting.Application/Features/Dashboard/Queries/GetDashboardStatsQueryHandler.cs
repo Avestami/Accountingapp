@@ -84,7 +84,7 @@ namespace Accounting.Application.Features.Dashboard.Queries
                 // Get Currency Balances
                 stats.CurrencyBalances = await GetCurrencyBalances(cancellationToken);
 
-                return Result<DashboardStatsDto>.Success(stats);
+                return Result.Success(stats);
             }
             catch (Exception ex)
             {

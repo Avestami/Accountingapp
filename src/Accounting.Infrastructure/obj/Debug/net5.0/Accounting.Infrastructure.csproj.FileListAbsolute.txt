@@ -33,3 +33,6 @@ D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infra
 D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounti.A036F2E3.Up2Date
 D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\refint\Accounting.Infrastructure.dll
 D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\ref\Accounting.Infrastructure.dll
+D:\Accountingapp\src\Accounting.Infrastructure\bin\Debug\net5.0\Accounting.Infrastructure.runtimeconfig.json
+D:\Accountingapp\src\Accounting.Infrastructure\bin\Debug\net5.0\Accounting.Infrastructure.runtimeconfig.dev.json
+D:\Accountingapp\src\Accounting.Infrastructure\obj\Debug\net5.0\Accounting.Infrastructure.genruntimeconfig.cache

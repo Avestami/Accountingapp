@@ -4,7 +4,9 @@ using MediatR;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using Accounting.Application.Features.Finance.Commands;
+using Accounting.Application.Features.Finance.Queries;
 using Accounting.Application.Common.Authorization;
+using System;
 
 namespace Accounting.API.Controllers
 {
@@ -61,47 +63,200 @@ namespace Accounting.API.Controllers
         }
 
         /// <summary>
-        /// Get cost by ID (placeholder)
+        /// Create a new transfer
+        /// </summary>
+        [HttpPost("transfers")]
+        [Permission(Permissions.FinanceCreate)]
+        public async Task<IActionResult> CreateTransfer([FromBody] CreateTransferCommand command)
+        {
+            // Set company from JWT token
+            command.Company = User.FindFirst("company")?.Value ?? "demo";
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return CreatedAtAction(nameof(GetTransfer), new { id = result.Value.Id }, result.Value);
+        }
+
+        /// <summary>
+        /// Get cost by ID
         /// </summary>
         [HttpGet("costs/{id}")]
         [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetCost(int id)
         {
-            // TODO: Implement GetCostQuery
-            return Ok(new { id, message = "Cost details will be implemented" });
+            var query = new GetCostByIdQuery 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo" 
+            };
+            
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Error);
+            }
+
+            return Ok(result.Value);
         }
 
         /// <summary>
-        /// Get income by ID (placeholder)
+        /// Get income by ID
         /// </summary>
         [HttpGet("incomes/{id}")]
         [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetIncome(int id)
         {
-            // TODO: Implement GetIncomeQuery
-            return Ok(new { id, message = "Income details will be implemented" });
+            var query = new GetIncomeByIdQuery 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo" 
+            };
+            
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Error);
+            }
+
+            return Ok(result.Value);
         }
 
         /// <summary>
-        /// Get all costs with pagination (placeholder)
+        /// Get transfer by ID (placeholder)
+        /// </summary>
+        [HttpGet("transfers/{id}")]
+        [Permission(Permissions.FinanceView)]
+        public async Task<IActionResult> GetTransfer(int id)
+        {
+            // TODO: Implement GetTransferByIdQuery
+            return Ok(new { id, message = "Transfer details will be implemented" });
+        }
+
+        /// <summary>
+        /// Get all costs with pagination and filtering
         /// </summary>
         [HttpGet("costs")]
         [Permission(Permissions.FinanceView)]
-        public async Task<IActionResult> GetCosts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetCosts(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? currency = null,
+            [FromQuery] int? counterpartyId = null,
+            [FromQuery] string? searchTerm = null)
         {
-            // TODO: Implement GetCostsQuery
-            return Ok(new { page, pageSize, message = "Costs list will be implemented" });
+            var query = new GetCostsQuery
+            {
+                Page = page,
+                PageSize = pageSize,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Currency = currency,
+                CounterpartyId = counterpartyId,
+                SearchTerm = searchTerm,
+                Company = User.FindFirst("company")?.Value ?? "demo"
+            };
+
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return Ok(result.Value);
         }
 
         /// <summary>
-        /// Get all incomes with pagination (placeholder)
+        /// Get all incomes with pagination and filtering
         /// </summary>
         [HttpGet("incomes")]
         [Permission(Permissions.FinanceView)]
-        public async Task<IActionResult> GetIncomes([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetIncomes(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? currency = null,
+            [FromQuery] int? counterpartyId = null,
+            [FromQuery] string? searchTerm = null)
         {
-            // TODO: Implement GetIncomesQuery
-            return Ok(new { page, pageSize, message = "Incomes list will be implemented" });
+            var query = new GetIncomesQuery
+            {
+                Page = page,
+                PageSize = pageSize,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Currency = currency,
+                CounterpartyId = counterpartyId,
+                SearchTerm = searchTerm,
+                Company = User.FindFirst("company")?.Value ?? "demo"
+            };
+
+            var result = await _mediator.Send(query);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Get all transfers with pagination (placeholder)
+        /// </summary>
+        [HttpGet("transfers")]
+        [Permission(Permissions.FinanceView)]
+        public async Task<IActionResult> GetTransfers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            // TODO: Implement GetTransfersQuery
+            return Ok(new { page, pageSize, message = "Transfers list will be implemented" });
+        }
+
+        /// <summary>
+        /// Export finance data in various formats
+        /// </summary>
+        [HttpPost("export")]
+        [Permission(Permissions.FinanceView)]
+        public async Task<IActionResult> ExportFinanceData([FromBody] ExportFinanceDataCommand command)
+        {
+            // Set company from JWT token
+            command.Company = User.FindFirst("company")?.Value ?? "demo";
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            var fileName = $"finance_export_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var contentType = command.Format switch
+            {
+                ExportFormat.Csv => "text/csv",
+                ExportFormat.Excel => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ExportFormat.Pdf => "application/pdf",
+                _ => "application/octet-stream"
+            };
+
+            var fileExtension = command.Format switch
+            {
+                ExportFormat.Csv => ".csv",
+                ExportFormat.Excel => ".xlsx",
+                ExportFormat.Pdf => ".pdf",
+                _ => ".bin"
+            };
+
+            return File(result.Value, contentType, $"{fileName}{fileExtension}");
         }
     }
 }

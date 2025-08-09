@@ -198,8 +198,9 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useFinanceStore } from '../../stores/finance'
 import AppButton from '@/components/AppButton.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
 
@@ -211,120 +212,80 @@ export default {
   },
   setup() {
     const router = useRouter()
-    const loading = ref(false)
-    const incomes = ref([])
+    const financeStore = useFinanceStore()
     
-    const filters = reactive({
+    // Reactive data
+    const loading = ref(false)
+    const error = ref(null)
+    const filters = ref({
       search: '',
       type: '',
       startDate: '',
       endDate: ''
     })
     
-    const pagination = reactive({
-      currentPage: 1,
-      perPage: 10,
-      total: 0,
-      from: 0,
-      to: 0,
-      totalPages: 0
+    const pagination = ref({
+      page: 1,
+      pageSize: 10,
+      total: 0
     })
     
+    // Computed properties
+    const incomes = computed(() => financeStore.incomes)
+    const totalIncomes = computed(() => financeStore.totalIncomes)
+    
+    // Methods
     const loadIncomes = async () => {
       loading.value = true
+      error.value = null
+      
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const params = {
+          page: pagination.value.page,
+          pageSize: pagination.value.pageSize,
+          search: filters.value.search,
+          fromDate: filters.value.startDate,
+          toDate: filters.value.endDate
+        }
         
-        // Mock data
+        await financeStore.loadIncomes(params)
+        pagination.value.total = totalIncomes.value
+      } catch (err) {
+        error.value = 'خطا در بارگذاری درآمدها'
+        console.error('Error loading incomes:', err)
+        
+        // Fallback to mock data
         const mockIncomes = [
           {
             id: 1,
             date: '1403/05/15',
             type: 'sales',
-            description: 'فروش بلیت هواپیما',
-            amount: 3500000
+            description: 'فروش محصول A',
+            amount: 2500000,
+            status: 'confirmed'
           },
           {
             id: 2,
             date: '1403/05/14',
             type: 'commission',
-            description: 'کمیسیون رزرو هتل',
-            amount: 1200000
+            description: 'کمیسیون فروش',
+            amount: 500000,
+            status: 'pending'
           },
           {
             id: 3,
-            date: '1403/05/12',
+            date: '1403/05/13',
             type: 'service',
-            description: 'خدمات ویزا',
-            amount: 2800000
-          },
-          {
-            id: 4,
-            date: '1403/05/10',
-            type: 'other',
-            description: 'مشاوره سفر',
-            amount: 500000
-          },
-          {
-            id: 5,
-            date: '1403/05/08',
-            type: 'sales',
-            description: 'فروش تور داخلی',
-            amount: 4500000
+            description: 'ارائه خدمات مشاوره',
+            amount: 1200000,
+            status: 'confirmed'
           }
         ]
-        
-        // Apply filters (in a real app, this would be done on the server)
-        let filteredIncomes = [...mockIncomes]
-        
-        if (filters.search) {
-          const searchTerm = filters.search.toLowerCase()
-          filteredIncomes = filteredIncomes.filter(income => 
-            income.description.toLowerCase().includes(searchTerm)
-          )
-        }
-        
-        if (filters.type) {
-          filteredIncomes = filteredIncomes.filter(income => income.type === filters.type)
-        }
-        
-        // Calculate pagination
-        pagination.total = filteredIncomes.length
-        pagination.totalPages = Math.ceil(pagination.total / pagination.perPage)
-        pagination.from = (pagination.currentPage - 1) * pagination.perPage + 1
-        pagination.to = Math.min(pagination.from + pagination.perPage - 1, pagination.total)
-        
-        // Slice for current page
-        const start = (pagination.currentPage - 1) * pagination.perPage
-        const end = start + pagination.perPage
-        incomes.value = filteredIncomes.slice(start, end)
-      } catch (error) {
-        console.error('Error loading incomes:', error)
-        alert('خطا در بارگذاری اطلاعات درآمدها')
+        financeStore.incomes = mockIncomes
+        financeStore.totalIncomes = mockIncomes.length
       } finally {
         loading.value = false
       }
-    }
-    
-    const resetFilters = () => {
-      filters.search = ''
-      filters.type = ''
-      filters.startDate = ''
-      filters.endDate = ''
-      pagination.currentPage = 1
-      loadIncomes()
-    }
-    
-    const applyFilters = () => {
-      pagination.currentPage = 1
-      loadIncomes()
-    }
-    
-    const changePage = (page) => {
-      if (page < 1 || page > pagination.totalPages) return
-      pagination.currentPage = page
-      loadIncomes()
     }
     
     const createNewIncome = () => {
@@ -341,40 +302,51 @@ export default {
     
     const deleteIncome = async (id) => {
       if (confirm('آیا از حذف این درآمد اطمینان دارید؟')) {
+        loading.value = true
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // TODO: Implement delete API call
+          // await financeApi.deleteIncome(id)
           
-          // Remove from local state
-          incomes.value = incomes.value.filter(income => income.id !== id)
-          pagination.total--
-          
-          alert('درآمد با موفقیت حذف شد.')
-          
-          // Reload if page is now empty
-          if (incomes.value.length === 0 && pagination.currentPage > 1) {
-            pagination.currentPage--
-            loadIncomes()
+          // For now, remove from local state
+          const index = financeStore.incomes.findIndex(income => income.id === id)
+          if (index !== -1) {
+            financeStore.incomes.splice(index, 1)
+            financeStore.totalIncomes--
           }
-        } catch (error) {
-          console.error('Error deleting income:', error)
-          alert('خطا در حذف درآمد')
+        } catch (err) {
+          error.value = 'خطا در حذف درآمد'
+          console.error('Error deleting income:', err)
+        } finally {
+          loading.value = false
         }
+      }
+    }
+    
+    const applyFilters = () => {
+      pagination.value.page = 1
+      loadIncomes()
+    }
+    
+    const resetFilters = () => {
+      filters.value = {
+        search: '',
+        type: '',
+        startDate: '',
+        endDate: ''
+      }
+      pagination.value.page = 1
+      loadIncomes()
+    }
+    
+    const changePage = (page) => {
+      if (page >= 1 && page <= Math.ceil(pagination.value.total / pagination.value.pageSize)) {
+        pagination.value.page = page
+        loadIncomes()
       }
     }
     
     const formatCurrency = (amount) => {
       return new Intl.NumberFormat('fa-IR').format(amount)
-    }
-    
-    const getTypeLabel = (type) => {
-      const labels = {
-        sales: 'فروش',
-        commission: 'کمیسیون',
-        service: 'خدمات',
-        other: 'سایر'
-      }
-      return labels[type] || type
     }
     
     const getTypeClass = (type) => {
@@ -384,29 +356,42 @@ export default {
         service: 'bg-purple-100 text-purple-800',
         other: 'bg-gray-100 text-gray-800'
       }
-      return classes[type] || 'bg-gray-100 text-gray-800'
+      return classes[type] || classes.other
     }
     
+    const getTypeLabel = (type) => {
+      const labels = {
+        sales: 'فروش',
+        commission: 'کمیسیون',
+        service: 'خدمات',
+        other: 'سایر'
+      }
+      return labels[type] || 'نامشخص'
+    }
+    
+    // Lifecycle
     onMounted(() => {
       loadIncomes()
     })
     
     return {
       loading,
-      incomes,
+      error,
       filters,
       pagination,
+      incomes,
+      totalIncomes,
       loadIncomes,
-      resetFilters,
-      applyFilters,
-      changePage,
       createNewIncome,
       viewIncome,
       editIncome,
       deleteIncome,
+      applyFilters,
+      resetFilters,
+      changePage,
       formatCurrency,
-      getTypeLabel,
-      getTypeClass
+      getTypeClass,
+      getTypeLabel
     }
   }
 }

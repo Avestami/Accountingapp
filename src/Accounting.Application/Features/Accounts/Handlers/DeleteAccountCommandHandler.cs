@@ -42,7 +42,7 @@ namespace Accounting.Application.Features.Accounts.Handlers
             await _unitOfWork.Accounts.DeleteAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<bool>.Success(true);
+            return Result.Success(true);
         }
     }
 }

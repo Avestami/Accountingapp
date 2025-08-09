@@ -63,7 +63,7 @@ namespace Accounting.Application.Features.Counterparties.Handlers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 var dto = MapToDto(counterparty);
-                return Result<CounterpartyDto>.Success(dto);
+                return Result.Success(dto);
             }
             catch (Exception ex)
             {

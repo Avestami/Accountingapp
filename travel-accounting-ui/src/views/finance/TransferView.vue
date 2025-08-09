@@ -221,8 +221,9 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useFinanceStore } from '../../stores/finance'
 import AppButton from '@/components/AppButton.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
 
@@ -234,132 +235,83 @@ export default {
   },
   setup() {
     const router = useRouter()
-    const loading = ref(false)
-    const transfers = ref([])
+    const financeStore = useFinanceStore()
     
-    const filters = reactive({
+    // Reactive data
+    const loading = ref(false)
+    const error = ref(null)
+    const filters = ref({
       search: '',
       status: '',
       startDate: '',
       endDate: ''
     })
     
-    const pagination = reactive({
-      currentPage: 1,
-      perPage: 10,
-      total: 0,
-      from: 0,
-      to: 0,
-      totalPages: 0
+    const pagination = ref({
+      page: 1,
+      pageSize: 10,
+      total: 0
     })
     
+    // Computed properties
+    const transfers = computed(() => financeStore.transfers)
+    const totalTransfers = computed(() => financeStore.totalTransfers)
+    
+    // Methods
     const loadTransfers = async () => {
       loading.value = true
+      error.value = null
+      
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const params = {
+          page: pagination.value.page,
+          pageSize: pagination.value.pageSize,
+          search: filters.value.search,
+          fromDate: filters.value.startDate,
+          toDate: filters.value.endDate
+        }
         
-        // Mock data
+        await financeStore.loadTransfers(params)
+        pagination.value.total = totalTransfers.value
+      } catch (err) {
+        error.value = 'خطا در بارگذاری انتقالات'
+        console.error('Error loading transfers:', err)
+        
+        // Fallback to mock data
         const mockTransfers = [
           {
             id: 1,
             date: '1403/05/15',
-            fromAccount: 'صندوق',
-            toAccount: 'بانک ملت',
+            fromAccount: 'حساب جاری بانک ملی',
+            toAccount: 'حساب پس‌انداز بانک پاسارگاد',
             amount: 2500000,
             status: 'completed',
-            description: 'انتقال وجه به حساب بانکی'
+            description: 'انتقال وجه برای پرداخت'
           },
           {
             id: 2,
             date: '1403/05/14',
-            fromAccount: 'بانک ملت',
-            toAccount: 'صندوق',
-            amount: 1800000,
+            fromAccount: 'حساب پس‌انداز بانک پاسارگاد',
+            toAccount: 'حساب جاری بانک صادرات',
+            amount: 1200000,
             status: 'pending',
-            description: 'برداشت از حساب بانکی'
+            description: 'انتقال وجه برای خرید'
           },
           {
             id: 3,
-            date: '1403/05/12',
-            fromAccount: 'صندوق',
-            toAccount: 'بانک پاسارگاد',
-            amount: 3200000,
+            date: '1403/05/13',
+            fromAccount: 'حساب جاری بانک صادرات',
+            toAccount: 'حساب جاری بانک ملی',
+            amount: 800000,
             status: 'completed',
-            description: 'واریز به حساب جاری'
-          },
-          {
-            id: 4,
-            date: '1403/05/10',
-            fromAccount: 'بانک پاسارگاد',
-            toAccount: 'صندوق',
-            amount: 950000,
-            status: 'cancelled',
-            description: 'برداشت لغو شده'
-          },
-          {
-            id: 5,
-            date: '1403/05/08',
-            fromAccount: 'صندوق',
-            toAccount: 'بانک صادرات',
-            amount: 4100000,
-            status: 'completed',
-            description: 'پرداخت به تامین کننده'
+            description: 'انتقال وجه داخلی'
           }
         ]
-        
-        // Apply filters (in a real app, this would be done on the server)
-        let filteredTransfers = [...mockTransfers]
-        
-        if (filters.search) {
-          const searchTerm = filters.search.toLowerCase()
-          filteredTransfers = filteredTransfers.filter(transfer => 
-            transfer.description.toLowerCase().includes(searchTerm) ||
-            transfer.fromAccount.toLowerCase().includes(searchTerm) ||
-            transfer.toAccount.toLowerCase().includes(searchTerm)
-          )
-        }
-        
-        if (filters.status) {
-          filteredTransfers = filteredTransfers.filter(transfer => transfer.status === filters.status)
-        }
-        
-        // Calculate pagination
-        pagination.total = filteredTransfers.length
-        pagination.totalPages = Math.ceil(pagination.total / pagination.perPage)
-        pagination.from = (pagination.currentPage - 1) * pagination.perPage + 1
-        pagination.to = Math.min(pagination.from + pagination.perPage - 1, pagination.total)
-        
-        // Slice for current page
-        const start = (pagination.currentPage - 1) * pagination.perPage
-        const end = start + pagination.perPage
-        transfers.value = filteredTransfers.slice(start, end)
-      } catch (error) {
-        console.error('Error loading transfers:', error)
-        alert('خطا در بارگذاری اطلاعات انتقالات')
+        financeStore.transfers = mockTransfers
+        financeStore.totalTransfers = mockTransfers.length
       } finally {
         loading.value = false
       }
-    }
-    
-    const resetFilters = () => {
-      filters.search = ''
-      filters.status = ''
-      filters.startDate = ''
-      filters.endDate = ''
-      pagination.currentPage = 1
-      loadTransfers()
-    }
-    
-    const applyFilters = () => {
-      pagination.currentPage = 1
-      loadTransfers()
-    }
-    
-    const changePage = (page) => {
-      if (page < 1 || page > pagination.totalPages) return
-      pagination.currentPage = page
-      loadTransfers()
     }
     
     const createNewTransfer = () => {
@@ -376,55 +328,71 @@ export default {
     
     const confirmTransfer = async (id) => {
       if (confirm('آیا از تأیید این انتقال اطمینان دارید؟')) {
+        loading.value = true
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // TODO: Implement confirm API call
+          // await financeApi.confirmTransfer(id)
           
-          // Update status in local state
-          const transfer = transfers.value.find(t => t.id === id)
+          // For now, update local state
+          const transfer = financeStore.transfers.find(t => t.id === id)
           if (transfer) {
             transfer.status = 'completed'
           }
-          
-          alert('انتقال با موفقیت تأیید شد.')
-        } catch (error) {
-          console.error('Error confirming transfer:', error)
-          alert('خطا در تأیید انتقال')
+        } catch (err) {
+          error.value = 'خطا در تأیید انتقال'
+          console.error('Error confirming transfer:', err)
+        } finally {
+          loading.value = false
         }
       }
     }
     
     const cancelTransfer = async (id) => {
       if (confirm('آیا از لغو این انتقال اطمینان دارید؟')) {
+        loading.value = true
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // TODO: Implement cancel API call
+          // await financeApi.cancelTransfer(id)
           
-          // Update status in local state
-          const transfer = transfers.value.find(t => t.id === id)
+          // For now, update local state
+          const transfer = financeStore.transfers.find(t => t.id === id)
           if (transfer) {
             transfer.status = 'cancelled'
           }
-          
-          alert('انتقال با موفقیت لغو شد.')
-        } catch (error) {
-          console.error('Error cancelling transfer:', error)
-          alert('خطا در لغو انتقال')
+        } catch (err) {
+          error.value = 'خطا در لغو انتقال'
+          console.error('Error cancelling transfer:', err)
+        } finally {
+          loading.value = false
         }
+      }
+    }
+    
+    const applyFilters = () => {
+      pagination.value.page = 1
+      loadTransfers()
+    }
+    
+    const resetFilters = () => {
+      filters.value = {
+        search: '',
+        status: '',
+        startDate: '',
+        endDate: ''
+      }
+      pagination.value.page = 1
+      loadTransfers()
+    }
+    
+    const changePage = (page) => {
+      if (page >= 1 && page <= Math.ceil(pagination.value.total / pagination.value.pageSize)) {
+        pagination.value.page = page
+        loadTransfers()
       }
     }
     
     const formatCurrency = (amount) => {
       return new Intl.NumberFormat('fa-IR').format(amount)
-    }
-    
-    const getStatusLabel = (status) => {
-      const labels = {
-        pending: 'در انتظار',
-        completed: 'تکمیل شده',
-        cancelled: 'لغو شده'
-      }
-      return labels[status] || status
     }
     
     const getStatusClass = (status) => {
@@ -436,27 +404,39 @@ export default {
       return classes[status] || 'bg-gray-100 text-gray-800'
     }
     
+    const getStatusLabel = (status) => {
+      const labels = {
+        pending: 'در انتظار',
+        completed: 'تکمیل شده',
+        cancelled: 'لغو شده'
+      }
+      return labels[status] || 'نامشخص'
+    }
+    
+    // Lifecycle
     onMounted(() => {
       loadTransfers()
     })
     
     return {
       loading,
-      transfers,
+      error,
       filters,
       pagination,
+      transfers,
+      totalTransfers,
       loadTransfers,
-      resetFilters,
-      applyFilters,
-      changePage,
       createNewTransfer,
       viewTransfer,
       editTransfer,
       confirmTransfer,
       cancelTransfer,
+      applyFilters,
+      resetFilters,
+      changePage,
       formatCurrency,
-      getStatusLabel,
-      getStatusClass
+      getStatusClass,
+      getStatusLabel
     }
   }
 }

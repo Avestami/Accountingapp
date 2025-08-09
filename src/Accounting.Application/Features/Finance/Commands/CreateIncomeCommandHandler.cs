@@ -95,7 +95,7 @@ namespace Accounting.Application.Features.Finance.Commands
                 await CreateLedgerEntriesAsync(income, cancellationToken);
 
                 var incomeDto = _mapper.Map<IncomeDto>(income);
-                return Result<IncomeDto>.Success(incomeDto);
+                return Result.Success(incomeDto);
             }
             catch (Exception ex)
             {

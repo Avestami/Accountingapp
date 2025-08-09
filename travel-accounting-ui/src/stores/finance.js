@@ -1,9 +1,25 @@
 import { defineStore } from 'pinia'
 import { mockData } from '../services/mockData'
+import { financeApi } from '../services/api'
 
 export const useFinanceStore = defineStore('finance', {
   state: () => ({
-    // Vouchers
+    // Costs
+    costs: [],
+    totalCosts: 0,
+    currentCost: null,
+    
+    // Incomes
+    incomes: [],
+    totalIncomes: 0,
+    currentIncome: null,
+    
+    // Transfers
+    transfers: [],
+    totalTransfers: 0,
+    currentTransfer: null,
+    
+    // Vouchers (legacy)
     vouchers: [],
     totalVouchers: 0,
     currentVoucher: null,
@@ -41,7 +57,46 @@ export const useFinanceStore = defineStore('finance', {
   }),
   
   getters: {
-    // Voucher getters
+    // Cost getters
+    getCostById: (state) => (id) => {
+      return state.costs.find(cost => cost.id === id)
+    },
+    
+    totalCostAmount: (state) => {
+      return state.costs.reduce((sum, cost) => sum + cost.amount, 0)
+    },
+    
+    pendingCosts: (state) => {
+      return state.costs.filter(c => c.status === 'pending').length
+    },
+    
+    // Income getters
+    getIncomeById: (state) => (id) => {
+      return state.incomes.find(income => income.id === id)
+    },
+    
+    totalIncomeAmount: (state) => {
+      return state.incomes.reduce((sum, income) => sum + income.amount, 0)
+    },
+    
+    pendingIncomes: (state) => {
+      return state.incomes.filter(i => i.status === 'pending').length
+    },
+    
+    // Transfer getters
+    getTransferById: (state) => (id) => {
+      return state.transfers.find(transfer => transfer.id === id)
+    },
+    
+    totalTransferAmount: (state) => {
+      return state.transfers.reduce((sum, transfer) => sum + transfer.amount, 0)
+    },
+    
+    pendingTransfers: (state) => {
+      return state.transfers.filter(t => t.status === 'pending').length
+    },
+    
+    // Voucher getters (legacy)
     getVoucherById: (state) => (id) => {
       return state.vouchers.find(voucher => voucher.id === id)
     },
@@ -131,7 +186,221 @@ export const useFinanceStore = defineStore('finance', {
   },
   
   actions: {
-    // Voucher actions
+    // Cost actions
+    async loadCosts(filters = {}) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const params = {
+          page: filters.page || 1,
+          pageSize: filters.pageSize || 10,
+          search: filters.search,
+          currency: filters.currency,
+          counterparty: filters.counterparty,
+          fromDate: filters.fromDate,
+          toDate: filters.toDate
+        }
+        
+        const response = await financeApi.getCosts(params)
+        this.costs = response.data
+        this.totalCosts = response.total
+        
+        return response
+      } catch (error) {
+        this.error = 'Error loading costs'
+        console.error('Error loading costs:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async loadCost(id) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const cost = await financeApi.getCost(id)
+        this.currentCost = cost
+        return cost
+      } catch (error) {
+        this.error = 'Error loading cost'
+        console.error('Error loading cost:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async createCost(costData) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const newCost = await financeApi.createCost(costData)
+        this.costs.unshift(newCost)
+        this.totalCosts++
+        this.currentCost = newCost
+        return newCost
+      } catch (error) {
+        this.error = 'Error creating cost'
+        console.error('Error creating cost:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    // Income actions
+    async loadIncomes(filters = {}) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const params = {
+          page: filters.page || 1,
+          pageSize: filters.pageSize || 10,
+          search: filters.search,
+          currency: filters.currency,
+          counterparty: filters.counterparty,
+          fromDate: filters.fromDate,
+          toDate: filters.toDate
+        }
+        
+        const response = await financeApi.getIncomes(params)
+        this.incomes = response.data
+        this.totalIncomes = response.total
+        
+        return response
+      } catch (error) {
+        this.error = 'Error loading incomes'
+        console.error('Error loading incomes:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async loadIncome(id) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const income = await financeApi.getIncome(id)
+        this.currentIncome = income
+        return income
+      } catch (error) {
+        this.error = 'Error loading income'
+        console.error('Error loading income:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async createIncome(incomeData) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const newIncome = await financeApi.createIncome(incomeData)
+        this.incomes.unshift(newIncome)
+        this.totalIncomes++
+        this.currentIncome = newIncome
+        return newIncome
+      } catch (error) {
+        this.error = 'Error creating income'
+        console.error('Error creating income:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    // Transfer actions
+    async loadTransfers(filters = {}) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const params = {
+          page: filters.page || 1,
+          pageSize: filters.pageSize || 10,
+          search: filters.search,
+          currency: filters.currency,
+          fromDate: filters.fromDate,
+          toDate: filters.toDate
+        }
+        
+        const response = await financeApi.getTransfers(params)
+        this.transfers = response.data
+        this.totalTransfers = response.total
+        
+        return response
+      } catch (error) {
+        this.error = 'Error loading transfers'
+        console.error('Error loading transfers:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async loadTransfer(id) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const transfer = await financeApi.getTransfer(id)
+        this.currentTransfer = transfer
+        return transfer
+      } catch (error) {
+        this.error = 'Error loading transfer'
+        console.error('Error loading transfer:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async createTransfer(transferData) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const newTransfer = await financeApi.createTransfer(transferData)
+        this.transfers.unshift(newTransfer)
+        this.totalTransfers++
+        this.currentTransfer = newTransfer
+        return newTransfer
+      } catch (error) {
+        this.error = 'Error creating transfer'
+        console.error('Error creating transfer:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    // Export action
+    async exportFinanceData(exportData) {
+      this.isLoading = true
+      this.error = null
+      
+      try {
+        const response = await financeApi.exportFinanceData(exportData)
+        return response
+      } catch (error) {
+        this.error = 'Error exporting finance data'
+        console.error('Error exporting finance data:', error)
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    // Voucher actions (legacy)
     async loadVouchers(filters = {}) {
       this.isLoading = true
       this.error = null

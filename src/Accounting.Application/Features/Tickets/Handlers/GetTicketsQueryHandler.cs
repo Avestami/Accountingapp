@@ -112,7 +112,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     query.PageSize
                 );
 
-                return Result<PagedResult<TicketDto>>.Success(pagedResult);
+                return Result.Success(pagedResult);
             }
             catch (Exception ex)
             {

@@ -8,6 +8,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -174,7 +181,42 @@ namespace Accounting.API
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AccountingDbContext>();
-                context.Database.EnsureCreated();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+                
+                try
+                {
+                    // Wait for SQL Server to be ready
+                    var retryCount = 0;
+                    var maxRetries = 30;
+                    
+                    while (retryCount < maxRetries)
+                    {
+                        try
+                        {
+                            context.Database.Migrate();
+                            logger.LogInformation("Database migration completed successfully.");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            retryCount++;
+                            logger.LogWarning($"Database migration attempt {retryCount} failed: {ex.Message}");
+                            
+                            if (retryCount >= maxRetries)
+                            {
+                                logger.LogError($"Failed to migrate database after {maxRetries} attempts: {ex}");
+                                throw;
+                            }
+                            
+                            Thread.Sleep(2000); // Wait 2 seconds before retry
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError($"Database initialization failed: {ex}");
+                    throw;
+                }
             }
 
             // app.UseHttpsRedirection(); // Temporarily disabled for testing
