@@ -36,7 +36,7 @@ namespace Accounting.Application.Features.Finance.Commands
             try
             {
                 // Generate document number
-                var documentNumber = await _documentNumberService.GetNextDocumentNumberAsync(
+                var documentNumber = await _documentNumberService.GetNextNumberAsync(
                     "INCOME", request.Company, cancellationToken);
 
                 // Calculate exchange rate and local amount
@@ -44,7 +44,7 @@ namespace Accounting.Application.Features.Finance.Commands
                 decimal localAmount = request.Amount * exchangeRate;
 
                 // Handle FX lot creation for foreign currencies
-                if (request.Currency != "IRR" && request.PaymentSource == PaymentSource.BankAccount)
+                if (request.Currency != "IRR" && request.PaymentSource == PaymentSource.Bank)
                 {
                     // Create FX lot for foreign currency income
                     await _fxFifoService.AddFxLotAsync(
@@ -64,7 +64,7 @@ namespace Accounting.Application.Features.Finance.Commands
 
                     if (!bankAccountExists)
                     {
-                        return Result<IncomeDto>.Failure("Invalid or inactive bank account");
+                        return Result.Failure<IncomeDto>("Invalid or inactive bank account");
                     }
                 }
 
@@ -99,7 +99,7 @@ namespace Accounting.Application.Features.Finance.Commands
             }
             catch (Exception ex)
             {
-                return Result<IncomeDto>.Failure($"Error creating income: {ex.Message}");
+                return Result.Failure<IncomeDto>($"Error creating income: {ex.Message}");
             }
         }
 

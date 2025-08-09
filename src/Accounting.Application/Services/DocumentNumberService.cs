@@ -46,7 +46,7 @@ namespace Accounting.Application.Services
                                 CurrentNumber = 1,
                                 PadLength = 6,
                                 Suffix = "",
-                                ResetPeriod = ResetPeriod.Yearly,
+                                ResetPeriod = Domain.Entities.ResetPeriod.Yearly,
                                 CreatedAt = DateTime.UtcNow
                             };
                             _context.DocumentNumbers.Add(docNumber);
@@ -106,9 +106,9 @@ namespace Accounting.Application.Services
             var now = DateTime.UtcNow;
             return docNumber.ResetPeriod switch
             {
-                ResetPeriod.Daily => docNumber.ResetDate.Value.Date < now.Date,
-                ResetPeriod.Monthly => docNumber.ResetDate.Value.Month != now.Month || docNumber.ResetDate.Value.Year != now.Year,
-                ResetPeriod.Yearly => docNumber.ResetDate.Value.Year != now.Year,
+                Domain.Entities.ResetPeriod.Daily => docNumber.ResetDate.Value.Date < now.Date,
+                Domain.Entities.ResetPeriod.Monthly => docNumber.ResetDate.Value.Month != now.Month || docNumber.ResetDate.Value.Year != now.Year,
+                Domain.Entities.ResetPeriod.Yearly => docNumber.ResetDate.Value.Year != now.Year,
                 _ => false
             };
         }
@@ -118,13 +118,5 @@ namespace Accounting.Application.Services
             var paddedNumber = docNumber.CurrentNumber.ToString().PadLeft(docNumber.PadLength, '0');
             return $"{docNumber.Prefix}{paddedNumber}{docNumber.Suffix}";
         }
-    }
-
-    public enum ResetPeriod
-    {
-        Never = 0,
-        Daily = 1,
-        Monthly = 2,
-        Yearly = 3
     }
 }

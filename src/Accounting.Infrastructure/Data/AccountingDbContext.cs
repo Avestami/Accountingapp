@@ -247,26 +247,18 @@ namespace Accounting.Infrastructure.Data
             modelBuilder.Entity<FxTransaction>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.TransactionNumber).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Type).HasConversion<int>();
-                entity.Property(e => e.FromCurrency).IsRequired().HasMaxLength(3);
-                entity.Property(e => e.ToCurrency).IsRequired().HasMaxLength(3);
-                entity.Property(e => e.FromAmount).HasColumnType("decimal(18,2)");
-                entity.Property(e => e.ToAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.RemainingAmount).HasColumnType("decimal(18,4)");
                 entity.Property(e => e.ExchangeRate).HasColumnType("decimal(18,6)");
-                entity.Property(e => e.RemainingAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TransactionType).HasConversion<int>();
+                entity.Property(e => e.Company).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Reference).HasMaxLength(100);
                 
-                entity.HasOne(e => e.Account)
-                    .WithMany(a => a.FxTransactions)
-                    .HasForeignKey(e => e.AccountId)
+                entity.HasMany(e => e.Consumptions)
+                    .WithOne(c => c.FxTransaction)
+                    .HasForeignKey(c => c.FxTransactionId)
                     .OnDelete(DeleteBehavior.Restrict);
-                    
-                entity.HasOne(e => e.Voucher)
-                    .WithMany()
-                    .HasForeignKey(e => e.VoucherId)
-                    .OnDelete(DeleteBehavior.SetNull);
-                    
-                entity.HasIndex(e => e.TransactionNumber).IsUnique();
             });
         }
         
@@ -275,18 +267,15 @@ namespace Accounting.Infrastructure.Data
             modelBuilder.Entity<FxConsumption>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
-                entity.Property(e => e.ExchangeRate).HasColumnType("decimal(18,6)");
-                entity.Property(e => e.GainLoss).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ConsumedAmount).HasColumnType("decimal(18,4)");
+                entity.Property(e => e.ConsumedRate).HasColumnType("decimal(18,6)");
+                entity.Property(e => e.ConsumedCost).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Company).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Reference).HasMaxLength(100);
                 
-                entity.HasOne(e => e.BuyTransaction)
+                entity.HasOne(e => e.FxTransaction)
                     .WithMany(f => f.Consumptions)
-                    .HasForeignKey(e => e.BuyTransactionId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                    
-                entity.HasOne(e => e.SellTransaction)
-                    .WithMany()
-                    .HasForeignKey(e => e.SellTransactionId)
+                    .HasForeignKey(e => e.FxTransactionId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }

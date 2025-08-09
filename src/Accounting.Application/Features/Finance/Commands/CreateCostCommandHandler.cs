@@ -36,7 +36,7 @@ namespace Accounting.Application.Features.Finance.Commands
             try
             {
                 // Generate document number
-                var documentNumber = await _documentNumberService.GetNextDocumentNumberAsync(
+                var documentNumber = await _documentNumberService.GetNextNumberAsync(
                     "COST", request.Company, cancellationToken);
 
                 // Calculate exchange rate and local amount
@@ -44,14 +44,14 @@ namespace Accounting.Application.Features.Finance.Commands
                 decimal localAmount = request.Amount * exchangeRate;
 
                 // Handle FX consumption for foreign currencies
-                if (request.Currency != "IRR" && request.PaymentSource == PaymentSource.BankAccount)
+                if (request.Currency != "IRR" && request.PaymentSource == PaymentSource.Bank)
                 {
                     var fxResult = await _fxFifoService.ConsumeFxAsync(
                         request.Currency, request.Amount, request.Company, cancellationToken);
 
                     if (!fxResult.IsSuccess)
                     {
-                        return Result<CostDto>.Failure(fxResult.Error ?? "Insufficient foreign currency balance");
+                        return Result.Failure<CostDto>(fxResult.Error ?? "Insufficient foreign currency balance");
                     }
 
                     // Use weighted average rate from FIFO consumption
@@ -67,7 +67,7 @@ namespace Accounting.Application.Features.Finance.Commands
 
                     if (!bankAccountExists)
                     {
-                        return Result<CostDto>.Failure("Invalid or inactive bank account");
+                        return Result.Failure<CostDto>("Invalid or inactive bank account");
                     }
                 }
 
@@ -102,7 +102,7 @@ namespace Accounting.Application.Features.Finance.Commands
             }
             catch (Exception ex)
             {
-                return Result<CostDto>.Failure($"Error creating cost: {ex.Message}");
+                return Result.Failure<CostDto>($"Error creating cost: {ex.Message}");
             }
         }
 

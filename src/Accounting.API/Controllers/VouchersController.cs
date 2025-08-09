@@ -58,7 +58,7 @@ namespace Accounting.API.Controllers
         /// Get all vouchers with pagination and filtering
         /// </summary>
         [HttpGet]
-        [RequirePermission(Permissions.VouchersView)]
+        [Permission(Permissions.VouchersView)]
         public async Task<ActionResult<PagedResult<VoucherDto>>> GetVouchers([FromQuery] GetVouchersQuery query)
         {
             var result = await _getVouchersHandler.Handle(query, CancellationToken.None);
@@ -92,7 +92,7 @@ namespace Accounting.API.Controllers
         /// Create a new voucher
         /// </summary>
         [HttpPost]
-        [RequirePermission(Permissions.VouchersCreate)]
+        [Permission(Permissions.VouchersCreate)]
         public async Task<ActionResult<VoucherDto>> CreateVoucher([FromBody] CreateVoucherCommand command)
         {
             var result = await _createVoucherHandler.Handle(command, CancellationToken.None);

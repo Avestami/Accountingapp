@@ -24,7 +24,7 @@ namespace Accounting.API.Controllers
         /// Create a new cost entry
         /// </summary>
         [HttpPost("costs")]
-        [RequirePermission(Permissions.FinanceCreate)]
+        [Permission(Permissions.FinanceCreate)]
         public async Task<IActionResult> CreateCost([FromBody] CreateCostCommand command)
         {
             // Set company from JWT token
@@ -44,7 +44,7 @@ namespace Accounting.API.Controllers
         /// Create a new income entry
         /// </summary>
         [HttpPost("incomes")]
-        [RequirePermission(Permissions.FinanceCreate)]
+        [Permission(Permissions.FinanceCreate)]
         public async Task<IActionResult> CreateIncome([FromBody] CreateIncomeCommand command)
         {
             // Set company from JWT token
@@ -64,7 +64,7 @@ namespace Accounting.API.Controllers
         /// Get cost by ID (placeholder)
         /// </summary>
         [HttpGet("costs/{id}")]
-        [RequirePermission(Permissions.FinanceView)]
+        [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetCost(int id)
         {
             // TODO: Implement GetCostQuery
@@ -75,7 +75,7 @@ namespace Accounting.API.Controllers
         /// Get income by ID (placeholder)
         /// </summary>
         [HttpGet("incomes/{id}")]
-        [RequirePermission(Permissions.FinanceView)]
+        [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetIncome(int id)
         {
             // TODO: Implement GetIncomeQuery
@@ -86,7 +86,7 @@ namespace Accounting.API.Controllers
         /// Get all costs with pagination (placeholder)
         /// </summary>
         [HttpGet("costs")]
-        [RequirePermission(Permissions.FinanceView)]
+        [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetCosts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // TODO: Implement GetCostsQuery
@@ -97,7 +97,7 @@ namespace Accounting.API.Controllers
         /// Get all incomes with pagination (placeholder)
         /// </summary>
         [HttpGet("incomes")]
-        [RequirePermission(Permissions.FinanceView)]
+        [Permission(Permissions.FinanceView)]
         public async Task<IActionResult> GetIncomes([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // TODO: Implement GetIncomesQuery
