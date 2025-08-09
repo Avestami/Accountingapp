@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 // Import views
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 import ChartOfAccountsView from '@/views/ChartOfAccountsView.vue'
 import UnissuedTicketsView from '@/views/sales/UnissuedTicketsView.vue'
 import IssuedTicketsView from '@/views/sales/IssuedTicketsView.vue'
@@ -42,6 +43,21 @@ const routes = [
       requiresAuth: true,
       title: 'داشبورد',
       breadcrumb: [{ text: 'داشبورد', to: '/' }]
+    }
+  },
+  
+  // Profile Route
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: ProfileView,
+    meta: {
+      requiresAuth: true,
+      title: 'پروفایل کاربری',
+      breadcrumb: [
+        { text: 'داشبورد', to: '/' },
+        { text: 'پروفایل کاربری', to: '/profile' }
+      ]
     }
   },
   

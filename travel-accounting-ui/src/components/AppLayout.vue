@@ -61,7 +61,7 @@
                 @click.away="showUserMenu = false"
               >
                 <div class="py-1">
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">پروفایل کاربری</a>
+                  <router-link to="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">پروفایل کاربری</router-link>
                   <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">تنظیمات</a>
                   <div class="border-t border-gray-100"></div>
                   <button

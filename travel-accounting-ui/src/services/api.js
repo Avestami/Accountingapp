@@ -46,11 +46,24 @@ class ApiClient {
     return this.request(url, { method: 'GET' })
   }
 
-  async post(endpoint, data) {
-    return this.request(endpoint, {
+  async post(endpoint, data, options = {}) {
+    const requestOptions = {
       method: 'POST',
-      body: JSON.stringify(data)
-    })
+      ...options
+    }
+    
+    // Handle FormData differently - don't stringify it and don't set Content-Type
+    if (data instanceof FormData) {
+      requestOptions.body = data
+      // Remove Content-Type header to let browser set it with boundary
+      if (requestOptions.headers && requestOptions.headers['Content-Type'] === 'multipart/form-data') {
+        delete requestOptions.headers['Content-Type']
+      }
+    } else {
+      requestOptions.body = JSON.stringify(data)
+    }
+    
+    return this.request(endpoint, requestOptions)
   }
 
   async put(endpoint, data) {
@@ -240,6 +253,17 @@ export const dashboardApi = {
   async getDashboardStats(params = {}) {
     return apiClient.get('/dashboard/stats', params)
   }
+}
+
+// User Profile API
+export const userProfileApi = {
+  getProfile: () => apiClient.get('/userprofile'),
+  updateProfile: (data) => apiClient.put('/userprofile', data),
+  changePassword: (data) => apiClient.post('/userprofile/change-password', data),
+  uploadProfilePicture: (formData) => apiClient.post('/userprofile/upload-picture', formData, {
+    headers: {}
+  }),
+  deleteProfilePicture: () => apiClient.delete('/userprofile/profile-picture')
 }
 
 export default apiClient

@@ -164,6 +164,34 @@
 
 ---
 
+## Recent Fixes & Improvements
+
+### Profile Picture Upload Fix (Latest)
+- **Issue**: Profile picture upload was failing with FormData serialization error
+- **Root Cause**: API client was incorrectly stringifying FormData objects and setting wrong Content-Type header
+- **Solution**: 
+  - Modified `ApiClient.post()` method to handle FormData directly without JSON.stringify
+  - Removed explicit `Content-Type: multipart/form-data` header to allow browser to set correct boundary
+  - Restarted UI container to apply changes
+- **Files Modified**: 
+  - `travel-accounting-ui/src/services/api.js`
+- **Status**: ✅ **RESOLVED** - Profile picture upload now works correctly with proper FormData handling
+
+### Dashboard Statistics Fix
+- **Issue**: Dashboard statistics were not loading properly due to property mapping issues
+- **Root Cause**: Mismatch between backend response properties and frontend expectations
+- **Solution**: 
+  - Fixed property mappings in `GetDashboardStatsQueryHandler.cs`
+  - Updated data type conversions for proper JSON serialization
+  - Enhanced error handling in dashboard API
+- **Files Modified**: 
+  - `src/Application/Queries/Dashboard/GetDashboardStatsQueryHandler.cs`
+  - `src/API/Controllers/DashboardController.cs`
+  - `travel-accounting-ui/src/views/DashboardView.vue`
+- **Status**: ✅ **RESOLVED** - Dashboard now displays real-time statistics correctly
+
+---
+
 ## Current Challenges
 
 ### Technical Challenges

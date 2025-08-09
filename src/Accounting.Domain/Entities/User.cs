@@ -17,6 +17,7 @@ namespace Accounting.Domain.Entities
         public DateTime? LastLoginAt { get; set; }
         public string RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
+        public string ProfilePicture { get; set; }
         
         // Navigation properties
         public virtual ICollection<Ticket> CreatedTickets { get; set; }

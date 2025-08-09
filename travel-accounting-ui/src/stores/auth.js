@@ -415,6 +415,18 @@ export const useAuthStore = defineStore('auth', {
     updateActivity() {
       this.lastActivity = Date.now()
       localStorage.setItem('last_activity', this.lastActivity.toString())
+    },
+
+    updateUserProfile(profileData) {
+      if (this.user) {
+        this.user.firstName = profileData.firstName
+        this.user.lastName = profileData.lastName
+        this.user.email = profileData.email
+        this.user.profilePicture = profileData.profilePicture
+        
+        // Update localStorage
+        localStorage.setItem('auth_user', JSON.stringify(this.user))
+      }
     }
   }
 })
