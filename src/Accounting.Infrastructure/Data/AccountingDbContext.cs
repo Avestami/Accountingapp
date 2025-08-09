@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
 using Accounting.Application.Interfaces;
+using BCrypt.Net;
 
 namespace Accounting.Infrastructure.Data
 {

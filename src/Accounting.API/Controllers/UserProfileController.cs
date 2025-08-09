@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using MediatR;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.Linq;
+using Accounting.Application.Features.Users.Commands;
 
 namespace Accounting.API.Controllers
 {
@@ -19,11 +21,13 @@ namespace Accounting.API.Controllers
     {
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<UserProfileController> _logger;
+        private readonly IMediator _mediator;
 
-        public UserProfileController(IWebHostEnvironment environment, ILogger<UserProfileController> logger)
+        public UserProfileController(IWebHostEnvironment environment, ILogger<UserProfileController> logger, IMediator mediator)
         {
             _environment = environment;
             _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -135,9 +139,24 @@ namespace Accounting.API.Controllers
                     return BadRequest(new { success = false, error = "رمز عبور جدید و تأیید آن مطابقت ندارند" });
                 }
 
-                // In real app, validate current password and update in database
-                // For now, just return success
-                return Ok(new { success = true, message = "رمز عبور با موفقیت تغییر یافت" });
+                var userId = GetCurrentUserId();
+                var command = new ChangePasswordCommand
+                {
+                    UserId = userId,
+                    CurrentPassword = request.CurrentPassword,
+                    NewPassword = request.NewPassword
+                };
+
+                var result = await _mediator.Send(command);
+                
+                if (result.IsSuccess)
+                {
+                    return Ok(new { success = true, message = "رمز عبور با موفقیت تغییر یافت" });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, error = result.Error });
+                }
             }
             catch (Exception ex)
             {

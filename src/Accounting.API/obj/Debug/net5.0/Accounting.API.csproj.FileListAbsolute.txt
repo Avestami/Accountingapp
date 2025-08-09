@@ -167,3 +167,4 @@ D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounti.467034C9.Up2Date
 D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\refint\Accounting.API.dll
 D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.genruntimeconfig.cache
 D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\ref\Accounting.API.dll
+D:\Accountingapp\src\Accounting.API\bin\Debug\net5.0\BCrypt.Net-Next.dll

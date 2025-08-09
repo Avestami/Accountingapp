@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Accounting.Application.Interfaces;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
+using BCrypt.Net;
 
 namespace Accounting.Application.Features.Users.Commands
 {
@@ -58,18 +59,19 @@ namespace Accounting.Application.Features.Users.Commands
 
         private bool VerifyPassword(string password, string hash)
         {
-            // Simple hash verification - in production, use proper password hashing like BCrypt
-            return HashPassword(password) == hash;
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, hash);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string HashPassword(string password)
         {
-            // Simple hash - in production, use proper password hashing like BCrypt
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return System.Convert.ToBase64String(hashedBytes);
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
     }
 }

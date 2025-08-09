@@ -170,6 +170,13 @@ namespace Accounting.API
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Accounting.API v1"));
             }
 
+            // Initialize database
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AccountingDbContext>();
+                context.Database.EnsureCreated();
+            }
+
             // app.UseHttpsRedirection(); // Temporarily disabled for testing
 
             // Add CORS
