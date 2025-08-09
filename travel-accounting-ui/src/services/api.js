@@ -235,4 +235,11 @@ export const settingsApi = {
   }
 }
 
+// Dashboard API
+export const dashboardApi = {
+  async getDashboardStats(params = {}) {
+    return apiClient.get('/dashboard/stats', params)
+  }
+}
+
 export default apiClient

@@ -56,6 +56,9 @@ namespace Accounting.API
             services.AddScoped<IDocumentNumberService, DocumentNumberService>();
             services.AddScoped<IFxFifoService, FxFifoService>();
 
+            // Register Query Handlers
+            services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Dashboard.Queries.GetDashboardStatsQuery, Accounting.Application.Common.Models.Result<Accounting.Application.Features.Dashboard.Queries.DashboardStatsDto>>, Accounting.Application.Features.Dashboard.Queries.GetDashboardStatsQueryHandler>();
+
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
 

@@ -1,8 +1,8 @@
 {
   "runtimeOptions": {
     "additionalProbingPaths": [
-      "C:\\Users\\Avesta\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\Avesta\\.nuget\\packages"
+      "C:\\Users\\Parsa\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Parsa\\.nuget\\packages"
     ]
   }
 }

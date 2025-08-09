@@ -256,6 +256,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useSalesStore } from '../stores/sales'
+import { dashboardApi } from '../services/api'
 import AppButton from '../components/AppButton.vue'
 import PersianDatePicker from '../components/PersianDatePicker.vue'
 import DashboardChart from '../components/DashboardChart.vue'
@@ -278,7 +279,7 @@ export default {
     const revenueChartPeriod = ref('30d')
     const salesChartType = ref('pie')
     
-    // User-specific statistics data
+    // Dashboard statistics data
     const stats = ref({
       salesDocuments: {
         total: 0,
@@ -291,79 +292,127 @@ export default {
       activeUsers: 0
     })
     
-    // Load user-specific dashboard data
+    const recentSales = ref([])
+    const recentVouchers = ref([])
+    
+    // Load dashboard data from API
     const loadDashboardData = async () => {
-      const user = authStore.user
-      if (!user) return
-      
-      // Generate user-specific mock data based on user role and ID
-      const userSeed = user.username ? user.username.length : 1
-      const roleSeed = user.role === 'admin' ? 3 : user.role === 'finance' ? 2 : 1
-      
-      stats.value = {
-        salesDocuments: {
-          total: 800 + (userSeed * roleSeed * 50),
-          issued: 650 + (userSeed * roleSeed * 40),
-          unissued: 150 + (userSeed * roleSeed * 10)
-        },
-        totalRevenue: 1500000000 + (userSeed * roleSeed * 100000000),
-        revenueGrowth: 5 + (userSeed * roleSeed * 2),
-        pendingVouchers: 10 + (userSeed * roleSeed * 3),
-        activeUsers: 3 + (userSeed * roleSeed)
+      try {
+        const params = {
+          fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+          toDate: new Date().toISOString().split('T')[0], // today
+          period: 30
+        }
+        
+        const response = await dashboardApi.getDashboardStats(params)
+        
+        if (response.success) {
+          const data = response.data
+          
+          // Update statistics
+          stats.value = {
+            salesDocuments: {
+              total: data.salesDocuments.total,
+              issued: data.salesDocuments.issued,
+              unissued: data.salesDocuments.unissued
+            },
+            totalRevenue: data.totalRevenue,
+            revenueGrowth: data.revenueGrowth,
+            pendingVouchers: data.pendingVouchers,
+            activeUsers: data.activeUsers
+          }
+          
+          // Update recent activities
+          recentSales.value = data.recentSales.map(sale => ({
+            id: sale.id,
+            documentNumber: sale.documentNumber,
+            counterparty: sale.counterparty,
+            amount: sale.amount,
+            date: sale.date,
+            status: sale.status
+          }))
+          
+          recentVouchers.value = data.recentVouchers.map(voucher => ({
+            id: voucher.id,
+            number: voucher.number,
+            description: voucher.description,
+            amount: voucher.amount,
+            date: voucher.date
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
+        
+        // Fallback to mock data if API fails
+        const user = authStore.user
+        const userSeed = user?.username ? user.username.length : 1
+        const roleSeed = user?.role === 'admin' ? 3 : user?.role === 'finance' ? 2 : 1
+        
+        stats.value = {
+          salesDocuments: {
+            total: 800 + (userSeed * roleSeed * 50),
+            issued: 650 + (userSeed * roleSeed * 40),
+            unissued: 150 + (userSeed * roleSeed * 10)
+          },
+          totalRevenue: 1500000000 + (userSeed * roleSeed * 100000000),
+          revenueGrowth: 5 + (userSeed * roleSeed * 2),
+          pendingVouchers: 10 + (userSeed * roleSeed * 3),
+          activeUsers: 3 + (userSeed * roleSeed)
+        }
+        
+        // Mock recent activities
+        recentSales.value = [
+          {
+            id: 1,
+            documentNumber: 'S-1403-001234',
+            counterparty: 'شرکت گردشگری آسمان',
+            amount: 15750000,
+            date: '1403/08/15',
+            status: 'issued'
+          },
+          {
+            id: 2,
+            documentNumber: 'S-1403-001233',
+            counterparty: 'آژانس مسافرتی پارس',
+            amount: 8900000,
+            date: '1403/08/14',
+            status: 'unissued'
+          },
+          {
+            id: 3,
+            documentNumber: 'S-1403-001232',
+            counterparty: 'دفتر خدمات مسافرتی ایران',
+            amount: 12300000,
+            date: '1403/08/13',
+            status: 'issued'
+          }
+        ]
+        
+        recentVouchers.value = [
+          {
+            id: 1,
+            number: 'V-1403-000456',
+            description: 'دریافت از مشتری',
+            amount: 15750000,
+            date: '1403/08/15'
+          },
+          {
+            id: 2,
+            number: 'V-1403-000455',
+            description: 'پرداخت کمیسیون',
+            amount: -2100000,
+            date: '1403/08/14'
+          },
+          {
+            id: 3,
+            number: 'V-1403-000454',
+            description: 'دریافت از مشتری',
+            amount: 8900000,
+            date: '1403/08/13'
+          }
+        ]
       }
     }
-    
-    // Recent activities data
-    const recentSales = ref([
-      {
-        id: 1,
-        documentNumber: 'S-1403-001234',
-        counterparty: 'شرکت گردشگری آسمان',
-        amount: 15750000,
-        date: '1403/08/15',
-        status: 'issued'
-      },
-      {
-        id: 2,
-        documentNumber: 'S-1403-001233',
-        counterparty: 'آژانس مسافرتی پارس',
-        amount: 8900000,
-        date: '1403/08/14',
-        status: 'unissued'
-      },
-      {
-        id: 3,
-        documentNumber: 'S-1403-001232',
-        counterparty: 'دفتر خدمات مسافرتی ایران',
-        amount: 12300000,
-        date: '1403/08/13',
-        status: 'issued'
-      }
-    ])
-    
-    const recentVouchers = ref([
-      {
-        id: 1,
-        number: 'V-1403-000456',
-        description: 'دریافت از مشتری',
-        amount: 15750000,
-        date: '1403/08/15'
-      },
-      {
-        id: 2,
-        number: 'V-1403-000455',
-        description: 'پرداخت کمیسیون',
-        amount: -2100000,
-        date: '1403/08/14'
-      },
-      {
-        id: 3,
-        number: 'V-1403-000454',
-        description: 'دریافت از مشتری',
-        amount: 8900000,
-        date: '1403/08/13'
-      }
-    ])
     
     // Methods
     const formatNumber = (number) => {
@@ -398,12 +447,7 @@ export default {
       isRefreshing.value = true
       
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Reload user-specific dashboard data
         await loadDashboardData()
-        
       } catch (error) {
         console.error('Error refreshing data:', error)
       } finally {
@@ -413,9 +457,7 @@ export default {
     
     // Lifecycle
     onMounted(async () => {
-      // Load user-specific dashboard data
       await loadDashboardData()
-      // Load initial data
       await salesStore.loadDocuments()
     })
     
