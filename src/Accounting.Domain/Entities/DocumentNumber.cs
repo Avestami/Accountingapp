@@ -5,6 +5,7 @@ namespace Accounting.Domain.Entities
     public class DocumentNumber : BaseEntity
     {
         public string DocumentType { get; set; }
+        public string Company { get; set; }
         public string Prefix { get; set; }
         public int CurrentNumber { get; set; }
         public int PadLength { get; set; }

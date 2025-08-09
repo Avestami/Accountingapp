@@ -32,6 +32,12 @@ namespace Accounting.API.Controllers
                     return BadRequest(new { message = "نام کاربری و رمز عبور الزامی است" });
                 }
 
+                // Simple captcha validation (stub for now)
+                if (!string.IsNullOrEmpty(request.CaptchaToken) && !ValidateCaptcha(request.CaptchaToken))
+                {
+                    return BadRequest(new { message = "کد امنیتی نامعتبر است" });
+                }
+
                 // Mock user validation - in real app, check against database
                 var user = ValidateUser(request.Username, request.Password, request.Company);
                 if (user == null)
@@ -41,6 +47,19 @@ namespace Accounting.API.Controllers
 
                 // Generate JWT token
                 var token = GenerateJwtToken(user);
+
+                // Set cookie if requested
+                if (request.RememberMe)
+                {
+                    var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddDays(30)
+                    };
+                    Response.Cookies.Append("auth_token", token, cookieOptions);
+                }
 
                 return Ok(new
                 {
@@ -60,6 +79,20 @@ namespace Accounting.API.Controllers
             {
                 return StatusCode(500, new { message = "خطا در سرور" });
             }
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("auth_token");
+            return Ok(new { message = "خروج موفقیت‌آمیز" });
+        }
+
+        private bool ValidateCaptcha(string captchaToken)
+        {
+            // Stub implementation - always return true for now
+            // In real implementation, validate against captcha service
+            return true;
         }
 
         private UserModel ValidateUser(string username, string password, string company)
@@ -143,6 +176,7 @@ namespace Accounting.API.Controllers
         public string Password { get; set; }
         public string Company { get; set; }
         public bool RememberMe { get; set; }
+        public string CaptchaToken { get; set; }
     }
 
     public class UserModel

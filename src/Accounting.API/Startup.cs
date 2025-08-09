@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,6 +22,8 @@ using Accounting.Application.Interfaces;
 using Accounting.Application.Features.Tickets.Handlers;
 using Accounting.Infrastructure;
 using Accounting.Infrastructure.Repositories;
+using Accounting.Application.Common.Authorization;
+using Accounting.Application.Services;
 
 namespace Accounting.API
 {
@@ -49,11 +52,33 @@ namespace Accounting.API
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            // Register services
+            services.AddScoped<IDocumentNumberService, DocumentNumberService>();
+
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
 
             // Add AutoMapper
             services.AddAutoMapper(typeof(CreateTicketCommandHandler).Assembly);
+
+            // Add Authorization
+            services.AddAuthorization(options =>
+            {
+                foreach (var permission in typeof(Permissions).GetFields())
+                {
+                    if (permission.IsLiteral && !permission.IsInitOnly)
+                    {
+                        var permissionValue = permission.GetValue(null)?.ToString();
+                        if (!string.IsNullOrEmpty(permissionValue))
+                        {
+                            options.AddPolicy(permissionValue, policy =>
+                                policy.Requirements.Add(new PermissionRequirement(permissionValue)));
+                        }
+                    }
+                }
+            });
+
+            services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
             // Add JWT Authentication
             var jwtKey = Configuration["Jwt:Key"];
