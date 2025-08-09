@@ -72,3 +72,11 @@ D:\work\Karlancer\Accountingproject1\src\Accounting.API\obj\Debug\net5.0\Account
 D:\work\Karlancer\Accountingproject1\src\Accounting.API\obj\Debug\net5.0\Accounting.API.genruntimeconfig.cache
 D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.dll
 D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.pdb
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.csproj.AssemblyReference.cache
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.GeneratedMSBuildEditorConfig.editorconfig
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.AssemblyInfoInputs.cache
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.AssemblyInfo.cs
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.csproj.CoreCompileInputs.cache
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.MvcApplicationPartsAssemblyInfo.cs
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.MvcApplicationPartsAssemblyInfo.cache
+D:\Accountingapp\src\Accounting.API\obj\Debug\net5.0\Accounting.API.sourcelink.json

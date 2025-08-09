@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 // Import views
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
+import ChartOfAccountsView from '@/views/ChartOfAccountsView.vue'
 import UnissuedTicketsView from '@/views/sales/UnissuedTicketsView.vue'
 import IssuedTicketsView from '@/views/sales/IssuedTicketsView.vue'
 import CanceledTicketsView from '@/views/sales/CanceledTicketsView.vue'
@@ -41,6 +42,21 @@ const routes = [
       requiresAuth: true,
       title: 'داشبورد',
       breadcrumb: [{ text: 'داشبورد', to: '/' }]
+    }
+  },
+  
+  // Chart of Accounts Route
+  {
+    path: '/chart-of-accounts',
+    name: 'ChartOfAccounts',
+    component: ChartOfAccountsView,
+    meta: {
+      requiresAuth: true,
+      title: 'دفتر حساب‌ها',
+      breadcrumb: [
+        { text: 'داشبورد', to: '/' },
+        { text: 'دفتر حساب‌ها', to: '/chart-of-accounts' }
+      ]
     }
   },
   

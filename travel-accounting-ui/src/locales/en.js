@@ -53,12 +53,14 @@ export default {
     active: 'Active',
     inactive: 'Inactive',
     enabled: 'Enabled',
-    disabled: 'Disabled'
+    saving: 'Saving...',
+    currency: 'Currency'
   },
 
   // Navigation
   nav: {
     dashboard: 'Dashboard',
+    chartOfAccounts: 'Chart of Accounts',
     sales: 'Sales',
     salesDocuments: 'Sales Documents',
     vouchers: 'Vouchers',
@@ -195,6 +197,29 @@ export default {
     timezone: 'Timezone',
     dateFormat: 'Date Format',
     numberFormat: 'Number Format'
+  },
+
+  // Chart of Accounts
+  chartOfAccounts: {
+    title: 'Chart of Accounts',
+    newAccount: 'New Account',
+    createAccount: 'Create Account',
+    editAccount: 'Edit Account',
+    accountCode: 'Account Code',
+    accountName: 'Account Name',
+    type: 'Type',
+    parentAccount: 'Parent Account',
+    noParent: 'No Parent',
+    balance: 'Balance',
+    asset: 'Asset',
+    liability: 'Liability',
+    equity: 'Equity',
+    revenue: 'Revenue',
+    expense: 'Expense',
+    confirmDelete: 'Are you sure you want to delete this account?',
+    accountCreated: 'Account created successfully',
+    accountUpdated: 'Account updated successfully',
+    accountDeleted: 'Account deleted successfully'
   },
 
   // Users

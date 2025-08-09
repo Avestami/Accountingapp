@@ -53,12 +53,14 @@ export default {
     active: 'فعال',
     inactive: 'غیرفعال',
     enabled: 'فعال',
-    disabled: 'غیرفعال'
+    saving: 'در حال ذخیره...',
+    currency: 'واحد پول'
   },
 
   // Navigation
   nav: {
     dashboard: 'داشبورد',
+    chartOfAccounts: 'دفتر حساب‌ها',
     sales: 'فروش',
     salesDocuments: 'اسناد فروش',
     vouchers: 'سندها',
@@ -195,6 +197,29 @@ export default {
     timezone: 'منطقه زمانی',
     dateFormat: 'فرمت تاریخ',
     numberFormat: 'فرمت اعداد'
+  },
+
+  // Chart of Accounts
+  chartOfAccounts: {
+    title: 'دفتر حساب‌ها',
+    newAccount: 'حساب جدید',
+    createAccount: 'ایجاد حساب',
+    editAccount: 'ویرایش حساب',
+    accountCode: 'کد حساب',
+    accountName: 'نام حساب',
+    type: 'نوع',
+    parentAccount: 'حساب والد',
+    noParent: 'بدون والد',
+    balance: 'مانده',
+    asset: 'دارایی',
+    liability: 'بدهی',
+    equity: 'حقوق صاحبان سهام',
+    revenue: 'درآمد',
+    expense: 'هزینه',
+    confirmDelete: 'آیا از حذف این حساب اطمینان دارید؟',
+    accountCreated: 'حساب با موفقیت ایجاد شد',
+    accountUpdated: 'حساب با موفقیت بروزرسانی شد',
+    accountDeleted: 'حساب با موفقیت حذف شد'
   },
 
   // Users

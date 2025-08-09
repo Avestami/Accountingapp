@@ -21,3 +21,11 @@ D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Applicat
 D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.AssemblyInfo.cs
 D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.csproj.CoreCompileInputs.cache
 D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounting.Application.sourcelink.json
+D:\Accountingapp\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.deps.json
+D:\Accountingapp\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.dll
+D:\Accountingapp\src\Accounting.Application\bin\Debug\net5.0\Accounting.Application.pdb
+D:\Accountingapp\src\Accounting.Application\bin\Debug\net5.0\Accounting.Domain.dll
+D:\Accountingapp\src\Accounting.Application\bin\Debug\net5.0\Accounting.Domain.pdb
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\Accounti.FFC24E91.Up2Date
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\refint\Accounting.Application.dll
+D:\Accountingapp\src\Accounting.Application\obj\Debug\net5.0\ref\Accounting.Application.dll

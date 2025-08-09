@@ -26,6 +26,12 @@ namespace Accounting.Application.Common.Authorization
         public const string VouchersPost = "vouchers.post";
         public const string VouchersApprove = "vouchers.approve";
 
+        // Accounts (Chart of Accounts)
+        public const string AccountsView = "accounts.view";
+        public const string AccountsCreate = "accounts.create";
+        public const string AccountsEdit = "accounts.edit";
+        public const string AccountsDelete = "accounts.delete";
+
         // Reports
         public const string ReportsView = "reports.view";
         public const string ReportsExport = "reports.export";
