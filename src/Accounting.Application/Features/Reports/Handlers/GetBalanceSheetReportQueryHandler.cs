@@ -127,14 +127,14 @@ namespace Accounting.Application.Features.Reports.Handlers
             // Group accounts by parent (simplified - could be more sophisticated)
             var parentGroups = accounts
                 .Where(a => accountBalances[a.Id] != 0)
-                .GroupBy(a => a.ParentId.HasValue ? accounts.FirstOrDefault(p => p.Id == a.ParentId)?.Name ?? sectionName : sectionName);
+                .GroupBy(a => a.ParentAccountId.HasValue ? accounts.FirstOrDefault(p => p.Id == a.ParentAccountId)?.AccountName ?? sectionName : sectionName);
 
             foreach (var group in parentGroups)
             {
                 var items = group.Select(a => new BalanceSheetItemDto
                 {
-                    AccountName = a.Name,
-                    AccountCode = a.Code,
+                    AccountName = a.AccountName,
+                    AccountCode = a.AccountCode,
                     Amount = Math.Abs(accountBalances[a.Id]) // Show absolute values in balance sheet
                 }).ToList();
 

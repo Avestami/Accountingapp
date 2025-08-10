@@ -56,7 +56,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure($"PDF export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"PDF export failed: {ex.Message}");
             }
         }
 
@@ -77,7 +77,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Excel export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"Excel export failed: {ex.Message}");
             }
         }
 
@@ -101,7 +101,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure($"CSV export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"CSV export failed: {ex.Message}");
             }
         }
 
@@ -129,7 +129,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure($"JSON export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"JSON export failed: {ex.Message}");
             }
         }
 
@@ -141,7 +141,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure<byte[]>($"Unsupported format: {options.Format}")
             };
         }
 
@@ -153,7 +153,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure<byte[]>($"Unsupported format: {options.Format}")
             };
         }
 
@@ -165,7 +165,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure<byte[]>($"Unsupported format: {options.Format}")
             };
         }
 
@@ -177,7 +177,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure<byte[]>($"Unsupported format: {options.Format}")
             };
         }
 
@@ -207,7 +207,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Multiple reports export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"Multiple reports export failed: {ex.Message}");
             }
         }
 
@@ -216,13 +216,13 @@ namespace Accounting.Application.Features.Reports.Services
             try
             {
                 if (!File.Exists(templatePath))
-                    return Result.Failure("Template file not found");
+                    return Result.Failure<byte[]>("Template file not found");
 
                 return await ExportToExcelAsync(data, options, cancellationToken);
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Template export failed: {ex.Message}");
+                return Result.Failure<byte[]>($"Template export failed: {ex.Message}");
             }
         }
 

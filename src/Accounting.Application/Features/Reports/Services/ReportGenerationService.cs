@@ -308,7 +308,7 @@ namespace Accounting.Application.Features.Reports.Services
                     filter.PageSize
                 );
 
-                return Result.Success(result);
+                return Result<PagedResult<T>>.Success(result);
             }
             catch (Exception ex)
             {

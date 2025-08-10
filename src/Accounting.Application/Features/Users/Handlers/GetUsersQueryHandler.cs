@@ -73,14 +73,12 @@ namespace Accounting.Application.Features.Users.Handlers
                     })
                     .ToListAsync();
 
-                var pagedResult = new PagedResult<UserDto>
-                {
-                    Items = users,
-                    TotalCount = totalCount,
-                    Page = request.Page,
-                    PageSize = request.PageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
-                };
+                var pagedResult = new PagedResult<UserDto>(
+                    users,
+                    totalCount,
+                    request.Page,
+                    request.PageSize
+                );
 
                 return Result.Success(pagedResult);
             }
