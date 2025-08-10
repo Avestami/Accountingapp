@@ -126,11 +126,11 @@ namespace Accounting.Application.Features.Reports.Handlers
                     ExpenseItems = expenseItems.OrderByDescending(x => x.Amount).ToList()
                 };
 
-                return Result<ProfitLossReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<ProfitLossReportDto>.Failure($"Error generating profit & loss report: {ex.Message}");
+                return Result.Failure<ProfitLossReportDto>($"Error generating profit & loss report: {ex.Message}");
             }
         }
     }

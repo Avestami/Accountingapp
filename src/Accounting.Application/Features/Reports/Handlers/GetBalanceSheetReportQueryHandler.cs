@@ -109,11 +109,11 @@ namespace Accounting.Application.Features.Reports.Handlers
                     Equity = equity
                 };
 
-                return Result<BalanceSheetReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<BalanceSheetReportDto>.Failure($"Error generating balance sheet report: {ex.Message}");
+                return Result.Failure<BalanceSheetReportDto>($"Error generating balance sheet report: {ex.Message}");
             }
         }
 

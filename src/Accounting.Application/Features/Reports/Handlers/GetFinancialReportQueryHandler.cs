@@ -108,11 +108,11 @@ namespace Accounting.Application.Features.Reports.Handlers
                     MonthlySummary = monthlySummary
                 };
 
-                return Result<FinancialReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<FinancialReportDto>.Failure($"Error generating financial report: {ex.Message}");
+                return Result.Failure<FinancialReportDto>($"Error generating financial report: {ex.Message}");
             }
         }
     }

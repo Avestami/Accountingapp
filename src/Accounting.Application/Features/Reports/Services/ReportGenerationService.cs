@@ -55,11 +55,11 @@ namespace Accounting.Application.Features.Reports.Services
                     MonthlySummary = GetMonthlySummary(tickets, filter.DateFrom, filter.DateTo)
                 };
 
-                return Result<SalesReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<SalesReportDto>.Failure($"Failed to generate sales report: {ex.Message}");
+                return Result.Failure<SalesReportDto>($"Failed to generate sales report: {ex.Message}");
             }
         }
 
@@ -108,11 +108,11 @@ namespace Accounting.Application.Features.Reports.Services
                     MonthlySummary = GetFinancialMonthlySummary(incomes, costs, filter.DateFrom, filter.DateTo)
                 };
 
-                return Result<FinancialReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<FinancialReportDto>.Failure($"Failed to generate financial report: {ex.Message}");
+                return Result.Failure<FinancialReportDto>($"Failed to generate financial report: {ex.Message}");
             }
         }
 
@@ -163,11 +163,11 @@ namespace Accounting.Application.Features.Reports.Services
                     ProfitMargin = totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0
                 };
 
-                return Result<ProfitLossReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<ProfitLossReportDto>.Failure($"Failed to generate profit/loss report: {ex.Message}");
+                return Result.Failure<ProfitLossReportDto>($"Failed to generate profit/loss report: {ex.Message}");
             }
         }
 
@@ -226,11 +226,11 @@ namespace Accounting.Application.Features.Reports.Services
                     }
                 };
 
-                return Result<BalanceSheetReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<BalanceSheetReportDto>.Failure($"Failed to generate balance sheet report: {ex.Message}");
+                return Result.Failure<BalanceSheetReportDto>($"Failed to generate balance sheet report: {ex.Message}");
             }
         }
 
@@ -242,23 +242,23 @@ namespace Accounting.Application.Features.Reports.Services
 
                 // Operating activities
                 var ticketQuery = _context.Tickets.Where(t => t.Status == TicketStatus.Completed);
-                ticketQuery = ApplyDateFilter(ticketQuery, t => t.RequestDate, filter.DateFrom, filter.DateTo);
+                ticketQuery = ApplyDateFilter(ticketQuery, t => t.RequestDate, filter.StartDate, filter.EndDate);
                 var cashFromTickets = await ticketQuery.SumAsync(t => t.Amount, cancellationToken);
 
                 var incomeQuery = _context.Incomes.AsQueryable();
-                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.DateFrom, filter.DateTo);
+                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.StartDate, filter.EndDate);
                 var otherIncome = await incomeQuery.SumAsync(i => i.Amount, cancellationToken);
 
                 var costQuery = _context.Costs.AsQueryable();
-                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.DateFrom, filter.DateTo);
+                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.StartDate, filter.EndDate);
                 var operatingExpenses = await costQuery.SumAsync(c => c.Amount, cancellationToken);
 
                 var netCashFromOperations = cashFromTickets + otherIncome - operatingExpenses;
 
                 var report = new CashFlowReportDto
                 {
-                    StartDate = filter.DateFrom ?? DateTime.MinValue,
-                    EndDate = filter.DateTo ?? DateTime.MaxValue,
+                    StartDate = filter.StartDate,
+                    EndDate = filter.EndDate,
                     OperatingActivities = new OperatingActivitiesDto
                     {
                         CashFromTicketSales = cashFromTickets,
@@ -279,11 +279,11 @@ namespace Accounting.Application.Features.Reports.Services
                     EndingCashBalance = netCashFromOperations
                 };
 
-                return Result<CashFlowReportDto>.Success(report);
+                return Result.Success(report);
             }
             catch (Exception ex)
             {
-                return Result<CashFlowReportDto>.Failure($"Failed to generate cash flow report: {ex.Message}");
+                return Result.Failure<CashFlowReportDto>($"Failed to generate cash flow report: {ex.Message}");
             }
         }
 
@@ -308,7 +308,7 @@ namespace Accounting.Application.Features.Reports.Services
                     filter.PageSize
                 );
 
-                return Result<PagedResult<T>>.Success(result);
+                return Result.Success(result);
             }
             catch (Exception ex)
             {
