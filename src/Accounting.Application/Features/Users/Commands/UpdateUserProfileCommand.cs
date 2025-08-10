@@ -56,7 +56,7 @@ namespace Accounting.Application.Features.Users.Commands
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result.Success(new UserProfileDto
+                return Result<UserProfileDto>.Success(new UserProfileDto
                 {
                     Id = user.Id,
                     Email = user.Email,

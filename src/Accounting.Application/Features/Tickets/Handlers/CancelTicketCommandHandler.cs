@@ -32,13 +32,13 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 if (ticket == null)
                 {
-                    return Result.Failure("Ticket not found");
+                    return Result.Failure<bool>("Ticket not found");
                 }
 
                 // Check if ticket can be cancelled (only non-cancelled tickets can be cancelled)
                 if (ticket.Status == TicketStatus.Cancelled)
                 {
-                    return Result.Failure("Ticket is already cancelled");
+                    return Result.Failure<bool>("Ticket is already cancelled");
                 }
 
                 // Update ticket status
@@ -60,7 +60,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error cancelling ticket: {ex.Message}");
+                return Result.Failure<bool>($"Error cancelling ticket: {ex.Message}");
             }
         }
     }

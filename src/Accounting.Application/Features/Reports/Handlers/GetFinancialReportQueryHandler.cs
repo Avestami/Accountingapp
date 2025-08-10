@@ -2,8 +2,7 @@ using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
-using Accounting.Domain.Enums;
-using MediatR;
+using Accounting.Application.Common.Queries;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Accounting.Application.Features.Reports.Handlers
 {
-    public class GetFinancialReportQueryHandler : IRequestHandler<GetFinancialReportQuery, Result<FinancialReportDto>>
+    public class GetFinancialReportQueryHandler : IQueryHandler<GetFinancialReportQuery, Result<FinancialReportDto>>
     {
         private readonly IAccountingDbContext _context;
 
@@ -109,7 +108,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                     MonthlySummary = monthlySummary
                 };
 
-                return Result.Success(report);
+                return Result<FinancialReportDto>.Success(report);
             }
             catch (Exception ex)
             {

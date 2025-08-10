@@ -79,7 +79,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 // Return DTO
                 var ticketDto = await MapToDto(ticket);
-                return Result.Success(ticketDto);
+                return Result<TicketDto>.Success(ticketDto);
             }
             catch (Exception ex)
             {

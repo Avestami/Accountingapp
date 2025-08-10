@@ -49,7 +49,7 @@ namespace Accounting.Application.Features.Airlines.Handlers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 var dto = MapToDto(airline);
-                return Result.Success(dto);
+                return Result<AirlineDto>.Success(dto);
             }
             catch (Exception ex)
             {

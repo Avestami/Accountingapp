@@ -49,7 +49,7 @@ namespace Accounting.Application.Features.Users.Commands
                 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result.Success(true);
+                return Result<bool>.Success(true);
             }
             catch (System.Exception ex)
             {

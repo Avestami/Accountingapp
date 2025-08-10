@@ -26,6 +26,7 @@ namespace Accounting.Application.Interfaces
         DbSet<Airline> Airlines { get; set; }
         DbSet<Origin> Origins { get; set; }
         DbSet<Destination> Destinations { get; set; }
+        DbSet<Location> Locations { get; set; }
         DbSet<AuditLog> AuditLogs { get; set; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

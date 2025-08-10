@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Accounting.Application.Common.Commands;
@@ -27,13 +28,13 @@ namespace Accounting.Application.Features.Finance.Handlers
 
                 if (transfer == null)
                 {
-                    return Result<bool>.Failure("Transfer not found");
+                    return Result.Failure<bool>("Transfer not found");
                 }
 
                 // Check if transfer can be deleted (only pending transfers can be deleted)
                 if (transfer.Status != TransferStatus.Pending)
                 {
-                    return Result<bool>.Failure("Only pending transfers can be deleted");
+                    return Result.Failure<bool>("Only pending transfers can be deleted");
                 }
 
                 // Remove related ledger entries first
@@ -52,7 +53,7 @@ namespace Accounting.Application.Features.Finance.Handlers
             }
             catch (System.Exception ex)
             {
-                return Result<bool>.Failure($"Error deleting transfer: {ex.Message}");
+                return Result.Failure<bool>($"Error deleting transfer: {ex.Message}");
             }
         }
     }

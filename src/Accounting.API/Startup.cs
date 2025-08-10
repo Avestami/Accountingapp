@@ -29,6 +29,7 @@ using Accounting.Infrastructure.Repositories;
 using Accounting.Application.Common.Authorization;
 using Accounting.Application.Services;
 using Accounting.Application.Common.Exceptions;
+using Accounting.API.Middleware;
 
 namespace Accounting.API
 {
@@ -86,6 +87,25 @@ namespace Accounting.API
             services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.RejectVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.RejectVoucherCommandHandler>();
             services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.SubmitVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.SubmitVoucherCommandHandler>();
             services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.CancelVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.CancelVoucherCommandHandler>();
+
+            // Register Banks Handlers
+            services.AddScoped<Accounting.Application.Features.Banks.Handlers.CreateBankCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Banks.Handlers.UpdateBankCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Banks.Handlers.DeleteBankCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Banks.Handlers.GetBanksQueryHandler>();
+            services.AddScoped<Accounting.Application.Features.Banks.Handlers.GetBankByIdQueryHandler>();
+
+            // Register Locations Handlers
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.CreateLocationCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.UpdateLocationCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.DeleteLocationCommandHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.GetLocationsQueryHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.GetLocationByIdQueryHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.GetCountriesQueryHandler>();
+            services.AddScoped<Accounting.Application.Features.Locations.Handlers.GetCitiesByCountryQueryHandler>();
+
+            // Register Audit Logs Handlers
+            services.AddScoped<Accounting.Application.Features.AuditLogs.Handlers.GetAuditLogsQueryHandler>();
 
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);
@@ -242,6 +262,9 @@ namespace Accounting.API
 
             // Add CORS
             app.UseCors("AllowAll");
+
+            // Add Audit Middleware
+            app.UseMiddleware<AuditMiddleware>();
 
             // Configure static files for profile pictures
             var uploadsPath = Path.Combine(env.ContentRootPath, "uploads");

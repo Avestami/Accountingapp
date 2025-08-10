@@ -28,6 +28,8 @@ namespace Accounting.Application.DTOs
         
         public string Type { get; set; } = "Location"; // Origin or Destination
         
+        public int? ParentId { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string Company { get; set; } = string.Empty;

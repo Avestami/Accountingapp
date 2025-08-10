@@ -76,7 +76,7 @@ namespace Accounting.Application.Features.Users.Commands
                 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result.Success(new ProfilePictureDto
+                return Result<ProfilePictureDto>.Success(new ProfilePictureDto
                 {
                     FileName = uniqueFileName,
                     ContentType = command.ContentType,

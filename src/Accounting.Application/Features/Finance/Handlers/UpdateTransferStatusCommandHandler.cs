@@ -37,18 +37,18 @@ namespace Accounting.Application.Features.Finance.Handlers
                 }
 
                 // Validate status transition
-                if (transfer.Status == Accounting.Domain.Entities.TransferStatus.Posted || transfer.Status == Accounting.Domain.Entities.TransferStatus.Cancelled)
+                if (transfer.Status == TransferStatus.Completed || transfer.Status == TransferStatus.Cancelled)
                 {
                     return Result.Failure<TransferDto>("Cannot update status of completed or cancelled transfer");
                 }
 
-                if ((Accounting.Domain.Entities.TransferStatus)request.Status == Accounting.Domain.Entities.TransferStatus.Draft)
+                if ((TransferStatus)request.Status == TransferStatus.Pending)
                 {
-                    return Result.Failure<TransferDto>("Cannot set status back to draft");
+                    return Result.Failure<TransferDto>("Cannot set status back to pending");
                 }
 
                 // Update transfer status
-                transfer.Status = (Accounting.Domain.Entities.TransferStatus)request.Status;
+                transfer.Status = (TransferStatus)request.Status;
                 transfer.UpdatedAt = System.DateTime.UtcNow;
                 
                 if (!string.IsNullOrEmpty(request.Notes))
@@ -59,7 +59,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 var transferDto = _mapper.Map<TransferDto>(transfer);
-                return Result.Success(transferDto);
+                return Result<TransferDto>.Success(transferDto);
             }
             catch (System.Exception ex)
             {

@@ -42,7 +42,7 @@ namespace Accounting.Application.Features.Airlines.Handlers
                 _context.Airlines.Remove(airline);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result.Success(true);
+                return Result<bool>.Success(true);
             }
             catch (Exception ex)
             {

@@ -42,7 +42,7 @@ namespace Accounting.Application.Features.Accounts.Handlers
                 UpdatedAt = account.UpdatedAt ?? DateTime.MinValue
             };
 
-            return Result.Success(accountDto);
+            return Result<AccountDto>.Success(accountDto);
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Accounting.Application.Features.Users.Handlers
                     UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow
                 };
 
-                return Result.Success(userDto);
+                return Result<UserDto>.Success(userDto);
             }
             catch (Exception ex)
             {

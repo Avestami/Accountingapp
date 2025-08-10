@@ -1,5 +1,6 @@
 using System;
 using Accounting.Domain.Entities;
+using Accounting.Domain.Enums;
 
 namespace Accounting.Application.DTOs
 {

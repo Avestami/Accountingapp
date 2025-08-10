@@ -37,7 +37,7 @@ namespace Accounting.Application.Features.Users.Handlers
                 await _unitOfWork.Users.UpdateAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result.Success(true);
+                return Result<bool>.Success(true);
             }
             catch (Exception ex)
             {

@@ -51,7 +51,7 @@ namespace Accounting.Application.Features.Accounts.Handlers
             await _unitOfWork.Accounts.AddAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result.Success(account.Id);
+            return Result<int>.Success(account.Id);
         }
     }
 }

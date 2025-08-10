@@ -90,7 +90,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     dto.IsWithinFiveDays = daysToTravel <= 5 && daysToTravel >= 0;
                 }
 
-                return Result.Success(dto);
+                return Result<TicketDto>.Success(dto);
             }
             catch (Exception ex)
             {

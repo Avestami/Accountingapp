@@ -24,6 +24,7 @@ import BanksView from '@/views/settings/BanksView.vue'
 import CounterpartiesView from '@/views/settings/CounterpartiesView.vue'
 import LocationsView from '@/views/settings/LocationsView.vue'
 import SystemSettingsView from '@/views/settings/SystemSettingsView.vue'
+import AuditLogsView from '@/views/settings/AuditLogsView.vue'
 
 const routes = [
   {
@@ -341,6 +342,19 @@ const routes = [
             { text: 'داشبورد', to: '/' },
             { text: 'تنظیمات', to: '/settings' },
             { text: 'تنظیمات سیستم', to: '/settings/system' }
+          ]
+        }
+      },
+      {
+        path: 'audit-logs',
+        name: 'AuditLogs',
+        component: AuditLogsView,
+        meta: {
+          title: 'گزارش فعالیت‌ها',
+          breadcrumb: [
+            { text: 'داشبورد', to: '/' },
+            { text: 'تنظیمات', to: '/settings' },
+            { text: 'گزارش فعالیت‌ها', to: '/settings/audit-logs' }
           ]
         }
       }

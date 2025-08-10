@@ -56,7 +56,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     UpdatedAt = cost.UpdatedAt
                 };
 
-                return Result.Success(costDto);
+                return Result<CostDto>.Success(costDto);
             }
             catch (System.Exception ex)
             {

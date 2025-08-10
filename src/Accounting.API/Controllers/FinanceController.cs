@@ -348,7 +348,7 @@ namespace Accounting.API.Controllers
         /// Update transfer
         /// </summary>
         [HttpPut("transfers/{id}")]
-        [Permission(Permissions.FinanceUpdate)]
+        [Permission(Permissions.FinanceEdit)]
         public async Task<IActionResult> UpdateTransfer(int id, [FromBody] UpdateTransferCommand command)
         {
             command.Id = id;

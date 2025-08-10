@@ -5,6 +5,7 @@ using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Finance.Queries;
 using Accounting.Application.Interfaces;
+using Accounting.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Finance.Handlers
@@ -52,7 +53,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 UpdatedAt = transfer.UpdatedAt
             };
 
-            return Result.Success(transferDto);
+            return Result<TransferDto>.Success(transferDto);
         }
     }
 }

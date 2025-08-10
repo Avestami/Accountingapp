@@ -29,13 +29,13 @@ namespace Accounting.Application.Features.Tickets.Handlers
 
                 if (ticket == null)
                 {
-                    return Result.Failure("Ticket not found");
+                    return Result.Failure<bool>("Ticket not found");
                 }
 
                 // Check if ticket can be deleted (only Unissued tickets can be deleted)
                 if (ticket.Status != TicketStatus.Draft)
                 {
-                    return Result.Failure("Only draft tickets can be deleted");
+                    return Result.Failure<bool>("Only draft tickets can be deleted");
                 }
 
                 // Remove ticket items first
@@ -50,7 +50,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error deleting ticket: {ex.Message}");
+                return Result.Failure<bool>($"Error deleting ticket: {ex.Message}");
             }
         }
     }

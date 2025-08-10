@@ -2,9 +2,9 @@ using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
-using Accounting.Domain.Enums;
 using Accounting.Domain.Entities;
-using MediatR;
+using Accounting.Domain.Enums;
+using Accounting.Application.Common.Queries;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Accounting.Application.Features.Reports.Handlers
 {
-    public class GetProfitLossReportQueryHandler : IRequestHandler<GetProfitLossReportQuery, Result<ProfitLossReportDto>>
+    public class GetProfitLossReportQueryHandler : IQueryHandler<GetProfitLossReportQuery, Result<ProfitLossReportDto>>
     {
         private readonly IAccountingDbContext _context;
 
@@ -127,7 +127,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                     ExpenseItems = expenseItems.OrderByDescending(x => x.Amount).ToList()
                 };
 
-                return Result.Success(report);
+                return Result<ProfitLossReportDto>.Success(report);
             }
             catch (Exception ex)
             {

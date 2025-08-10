@@ -1,15 +1,16 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Interfaces;
 using Accounting.Application.Services;
-using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Finance.Handlers
@@ -32,7 +33,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 // Custom validation
                 if (!request.IsValid(out string validationError))
                 {
-                    return Result<TransferDto>.Failure(validationError);
+                    return Result.Failure<TransferDto>(validationError);
                 }
 
                 var transfer = await _context.Transfers
@@ -42,13 +43,13 @@ namespace Accounting.Application.Features.Finance.Handlers
 
                 if (transfer == null)
                 {
-                    return Result<TransferDto>.Failure("Transfer not found");
+                    return Result.Failure<TransferDto>("Transfer not found");
                 }
 
                 // Only pending transfers can be updated
                 if (transfer.Status != TransferStatus.Pending)
                 {
-                    return Result<TransferDto>.Failure("Only pending transfers can be updated");
+                    return Result.Failure<TransferDto>("Only pending transfers can be updated");
                 }
 
                 // Validate bank accounts exist and belong to the company
@@ -60,19 +61,19 @@ namespace Accounting.Application.Features.Finance.Handlers
 
                 if (fromAccount == null)
                 {
-                    return Result<TransferDto>.Failure("From bank account not found");
+                    return Result.Failure<TransferDto>("From bank account not found");
                 }
 
                 if (toAccount == null)
                 {
-                    return Result<TransferDto>.Failure("To bank account not found");
+                    return Result.Failure<TransferDto>("To bank account not found");
                 }
 
                 // Check if accounts have sufficient balance (for from account)
                 var currentBalance = await GetAccountBalance(request.FromAccountId, request.Company, cancellationToken);
                 if (currentBalance < request.Amount && request.FromAccountId != transfer.FromBankAccountId)
                 {
-                    return Result<TransferDto>.Failure($"Insufficient balance in from account. Available: {currentBalance:C}");
+                    return Result.Failure<TransferDto>($"Insufficient balance in from account. Available: {currentBalance:C}");
                 }
 
                 // Update transfer properties
@@ -119,17 +120,16 @@ namespace Accounting.Application.Features.Finance.Handlers
             }
             catch (Exception ex)
             {
-                return Result<TransferDto>.Failure($"Error updating transfer: {ex.Message}");
+                return Result.Failure<TransferDto>($"Error updating transfer: {ex.Message}");
             }
         }
 
         private async Task<decimal> GetAccountBalance(int accountId, string company, CancellationToken cancellationToken)
         {
-            var balance = await _context.LedgerEntries
-                .Where(le => le.BankAccountId == accountId && le.Company == company)
-                .SumAsync(le => le.LocalDebitAmount - le.LocalCreditAmount, cancellationToken);
+            var account = await _context.BankAccounts
+                .FirstOrDefaultAsync(ba => ba.Id == accountId && ba.Company == company, cancellationToken);
 
-            return balance;
+            return account?.OpeningBalance ?? 0;
         }
     }
 }

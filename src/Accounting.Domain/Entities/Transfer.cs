@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Accounting.Domain.Enums;
 
 namespace Accounting.Domain.Entities
 {
@@ -38,6 +39,9 @@ namespace Accounting.Domain.Entities
         public decimal? ExchangeRate { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
+        public decimal LocalAmount { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? FeeAmount { get; set; }
 
         [MaxLength(100)]
@@ -47,7 +51,7 @@ namespace Accounting.Domain.Entities
         public string? Notes { get; set; }
 
         [Required]
-        public TransferStatus Status { get; set; } = TransferStatus.Draft;
+        public TransferStatus Status { get; set; } = TransferStatus.Pending;
 
         [Required]
         [MaxLength(50)]
@@ -59,12 +63,5 @@ namespace Accounting.Domain.Entities
 
         [ForeignKey("ToBankAccountId")]
         public virtual BankAccount ToBankAccount { get; set; } = null!;
-    }
-
-    public enum TransferStatus
-    {
-        Draft = 1,
-        Posted = 2,
-        Cancelled = 3
     }
 }

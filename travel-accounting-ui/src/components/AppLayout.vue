@@ -299,6 +299,13 @@
                 >
                   مبادی و مقاصد
                 </router-link>
+                <router-link
+                  to="/settings/audit-logs"
+                  class="block px-3 py-2 text-sm rounded-md transition-colors"
+                  :class="isActiveRoute('/settings/audit-logs') ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                >
+                  گزارش فعالیت‌ها
+                </router-link>
               </div>
             </div>
           </div>

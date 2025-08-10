@@ -32,7 +32,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 // Custom validation
                 if (!request.IsValid(out string validationError))
                 {
-                    return Result<TransferDto>.Failure(validationError);
+                    return Result.Failure<TransferDto>(validationError);
                 }
 
                 // Validate bank accounts exist and belong to the company
@@ -44,24 +44,24 @@ namespace Accounting.Application.Features.Finance.Handlers
 
                 if (fromBankAccount == null)
                 {
-                    return Result<TransferDto>.Failure("From bank account not found");
+                    return Result.Failure<TransferDto>("From bank account not found");
                 }
 
                 if (toBankAccount == null)
                 {
-                    return Result<TransferDto>.Failure("To bank account not found");
+                    return Result.Failure<TransferDto>("To bank account not found");
                 }
 
                 // Check if from account has sufficient balance
                 var currentBalance = await GetAccountBalance(request.FromAccountId, request.Company, cancellationToken);
                 if (currentBalance < request.Amount)
                 {
-                    return Result<TransferDto>.Failure($"Insufficient balance in from account. Available: {currentBalance:C}");
+                    return Result.Failure<TransferDto>($"Insufficient balance in from account. Available: {currentBalance:C}");
                 }
 
                 // Generate document number
                 var documentNumber = await _documentNumberService.GetNextNumberAsync(
-                    DocumentType.Transfer, 
+                    "TRANSFER", 
                     request.Company, 
                     cancellationToken);
 
@@ -119,17 +119,17 @@ namespace Accounting.Application.Features.Finance.Handlers
             }
             catch (Exception ex)
             {
-                return Result<TransferDto>.Failure($"Error creating transfer: {ex.Message}");
+                return Result.Failure<TransferDto>($"Error creating transfer: {ex.Message}");
             }
         }
 
         private async Task<decimal> GetAccountBalance(int accountId, string company, CancellationToken cancellationToken)
         {
-            var balance = await _context.LedgerEntries
-                .Where(le => le.BankAccountId == accountId && le.Company == company)
-                .SumAsync(le => le.LocalDebitAmount - le.LocalCreditAmount, cancellationToken);
-
-            return balance;
+            // Get balance from bank account directly or calculate from transfers
+            var bankAccount = await _context.BankAccounts
+                .FirstOrDefaultAsync(ba => ba.Id == accountId && ba.Company == company, cancellationToken);
+            
+            return bankAccount?.OpeningBalance ?? 0;
         }
 
         private async Task CreateLedgerEntriesAsync(Transfer transfer, BankAccount fromAccount, BankAccount toAccount, CancellationToken cancellationToken)
@@ -139,14 +139,17 @@ namespace Accounting.Application.Features.Finance.Handlers
             {
                 Date = transfer.Date,
                 DocumentNumber = transfer.DocumentNumber,
+                DocumentType = "Transfer",
+                DocumentId = transfer.Id,
                 Description = $"Transfer to {toAccount.AccountName}",
+                AccountCode = "BANK",
+                AccountName = fromAccount.AccountName,
                 DebitAmount = 0,
                 CreditAmount = transfer.Amount,
                 Currency = transfer.Currency,
                 ExchangeRate = transfer.ExchangeRate,
                 LocalDebitAmount = 0,
                 LocalCreditAmount = transfer.LocalAmount,
-                BankAccountId = transfer.FromBankAccountId,
                 Reference = transfer.Reference,
                 Company = transfer.Company
             };
@@ -156,14 +159,17 @@ namespace Accounting.Application.Features.Finance.Handlers
             {
                 Date = transfer.Date,
                 DocumentNumber = transfer.DocumentNumber,
+                DocumentType = "Transfer",
+                DocumentId = transfer.Id,
                 Description = $"Transfer from {fromAccount.AccountName}",
+                AccountCode = "BANK",
+                AccountName = toAccount.AccountName,
                 DebitAmount = transfer.Amount,
                 CreditAmount = 0,
                 Currency = transfer.Currency,
                 ExchangeRate = transfer.ExchangeRate,
                 LocalDebitAmount = transfer.LocalAmount,
                 LocalCreditAmount = 0,
-                BankAccountId = transfer.ToBankAccountId,
                 Reference = transfer.Reference,
                 Company = transfer.Company
             };

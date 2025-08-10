@@ -38,6 +38,10 @@ namespace Accounting.Domain.Entities
         [MaxLength(500)]
         public string? Description { get; set; }
 
+        [Required]
+        [MaxLength(50)]
+        public string Company { get; set; } = string.Empty;
+
         // Navigation properties
         [ForeignKey("BankId")]
         public virtual Bank Bank { get; set; } = null!;

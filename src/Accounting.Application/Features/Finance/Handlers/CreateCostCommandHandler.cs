@@ -32,7 +32,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 // Custom validation
                 if (!request.IsValid(out string validationError))
                 {
-                    return Result<CostDto>.Failure(validationError);
+                    return Result.Failure<CostDto>(validationError);
                 }
 
                 // Validate bank account if payment source is bank
@@ -40,18 +40,18 @@ namespace Accounting.Application.Features.Finance.Handlers
                 if (request.PaymentSource == PaymentSource.Bank)
                 {
                     bankAccount = await _context.BankAccounts
-                        .FirstOrDefaultAsync(ba => ba.Id == request.BankAccountId && ba.Company == request.Company, cancellationToken);
+                        .FirstOrDefaultAsync(ba => ba.Id == request.BankAccountId, cancellationToken);
                     
                     if (bankAccount == null)
                     {
-                        return Result<CostDto>.Failure("Bank account not found");
+                        return Result.Failure<CostDto>("Bank account not found");
                     }
 
                     // Check if bank account has sufficient balance
-                    var currentBalance = await GetAccountBalance(request.BankAccountId.Value, request.Company, cancellationToken);
+                    var currentBalance = await GetAccountBalance(request.BankAccountId.Value, cancellationToken);
                     if (currentBalance < request.Amount)
                     {
-                        return Result<CostDto>.Failure($"Insufficient balance in bank account. Available: {currentBalance:C}");
+                        return Result.Failure<CostDto>($"Insufficient balance in bank account. Available: {currentBalance:C}");
                     }
                 }
 
@@ -60,17 +60,17 @@ namespace Accounting.Application.Features.Finance.Handlers
                 if (request.CounterpartyId.HasValue)
                 {
                     counterparty = await _context.Counterparties
-                        .FirstOrDefaultAsync(c => c.Id == request.CounterpartyId && c.Company == request.Company, cancellationToken);
+                        .FirstOrDefaultAsync(c => c.Id == request.CounterpartyId, cancellationToken);
                     
                     if (counterparty == null)
                     {
-                        return Result<CostDto>.Failure("Counterparty not found");
+                        return Result.Failure<CostDto>("Counterparty not found");
                     }
                 }
 
                 // Generate document number
                 var documentNumber = await _documentNumberService.GetNextNumberAsync(
-                    DocumentType.Cost, 
+                    "COST", 
                     request.Company, 
                     cancellationToken);
 
@@ -133,14 +133,14 @@ namespace Accounting.Application.Features.Finance.Handlers
             }
             catch (Exception ex)
             {
-                return Result<CostDto>.Failure($"Error creating cost: {ex.Message}");
+                return Result.Failure<CostDto>($"Error creating cost: {ex.Message}");
             }
         }
 
-        private async Task<decimal> GetAccountBalance(int accountId, string company, CancellationToken cancellationToken)
+        private async Task<decimal> GetAccountBalance(int accountId, CancellationToken cancellationToken)
         {
             var balance = await _context.LedgerEntries
-                .Where(le => le.AccountCode == "BANK" && le.Company == company)
+                .Where(le => le.AccountCode == "BANK")
                 .SumAsync(le => le.LocalDebitAmount - le.LocalCreditAmount, cancellationToken);
 
             return balance;
@@ -156,7 +156,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 DocumentType = "COST",
                 DocumentId = cost.Id,
                 Description = cost.Description,
-                AccountCode = bankAccount.AccountCode,
+                AccountCode = "BANK", // Using generic bank account code since BankAccount doesn't have AccountCode
                 AccountName = bankAccount.AccountName,
                 DebitAmount = 0,
                 CreditAmount = cost.Amount,

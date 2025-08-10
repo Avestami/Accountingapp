@@ -42,7 +42,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 _context.Incomes.Remove(income);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Result.Success(true);
+                return Result<bool>.Success(true);
             }
             catch (System.Exception ex)
             {

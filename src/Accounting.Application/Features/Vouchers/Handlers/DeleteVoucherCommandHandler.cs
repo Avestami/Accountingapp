@@ -73,7 +73,7 @@ namespace Accounting.Application.Features.Vouchers.Handlers
 
                     _logger.LogInformation("Voucher {VoucherNumber} deleted successfully", voucher.VoucherNumber);
                     
-                    return Result.Success(true);
+                    return Result<bool>.Success(true);
                 }
                 catch
                 {

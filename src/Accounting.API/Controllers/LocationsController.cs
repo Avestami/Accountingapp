@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Accounting.Domain.Entities;
-using Accounting.Application.Interfaces;
-using Accounting.Infrastructure.Data;
+using Accounting.Application.Features.Locations.Commands;
+using Accounting.Application.Features.Locations.Queries;
+using Accounting.Application.Features.Locations.Handlers;
+using Accounting.Application.DTOs;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
 using System;
-using System.Linq;
 
 namespace Accounting.API.Controllers
 {
@@ -18,12 +18,32 @@ namespace Accounting.API.Controllers
     [Authorize]
     public class LocationsController : ControllerBase
     {
-        private readonly AccountingDbContext _context;
-    private readonly ILogger<LocationsController> _logger;
+        private readonly CreateLocationCommandHandler _createLocationHandler;
+        private readonly UpdateLocationCommandHandler _updateLocationHandler;
+        private readonly DeleteLocationCommandHandler _deleteLocationHandler;
+        private readonly GetLocationsQueryHandler _getLocationsHandler;
+        private readonly GetLocationByIdQueryHandler _getLocationByIdHandler;
+        private readonly GetCountriesQueryHandler _getCountriesHandler;
+        private readonly GetCitiesByCountryQueryHandler _getCitiesByCountryHandler;
+        private readonly ILogger<LocationsController> _logger;
 
-    public LocationsController(AccountingDbContext context, ILogger<LocationsController> logger)
+        public LocationsController(
+            CreateLocationCommandHandler createLocationHandler,
+            UpdateLocationCommandHandler updateLocationHandler,
+            DeleteLocationCommandHandler deleteLocationHandler,
+            GetLocationsQueryHandler getLocationsHandler,
+            GetLocationByIdQueryHandler getLocationByIdHandler,
+            GetCountriesQueryHandler getCountriesHandler,
+            GetCitiesByCountryQueryHandler getCitiesByCountryHandler,
+            ILogger<LocationsController> logger)
         {
-            _context = context;
+            _createLocationHandler = createLocationHandler;
+            _updateLocationHandler = updateLocationHandler;
+            _deleteLocationHandler = deleteLocationHandler;
+            _getLocationsHandler = getLocationsHandler;
+            _getLocationByIdHandler = getLocationByIdHandler;
+            _getCountriesHandler = getCountriesHandler;
+            _getCitiesByCountryHandler = getCitiesByCountryHandler;
             _logger = logger;
         }
 
@@ -31,385 +51,194 @@ namespace Accounting.API.Controllers
         public async Task<ActionResult<List<LocationDto>>> GetLocations(
             [FromQuery] string? type = null,
             [FromQuery] bool? isActive = null,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] int? parentId = null)
         {
-            try
+            var query = new GetLocationsQuery
             {
-                var query = _context.Locations
-                    .Include(l => l.Parent)
-                    .AsQueryable();
+                Type = type,
+                IsActive = isActive,
+                SearchTerm = searchTerm,
+                ParentId = parentId
+            };
 
-                // Apply filters
-                if (!string.IsNullOrEmpty(type))
-                {
-                    query = query.Where(l => l.Type == type);
-                }
+            var result = await _getLocationsHandler.Handle(query, CancellationToken.None);
 
-                if (isActive.HasValue)
-                {
-                    query = query.Where(l => l.IsActive == isActive.Value);
-                }
-
-                if (!string.IsNullOrEmpty(searchTerm))
-                {
-                    query = query.Where(l => 
-                        l.Name.Contains(searchTerm) ||
-                        (l.Code != null && l.Code.Contains(searchTerm)));
-                }
-
-                var locations = await query
-                    .OrderBy(l => l.Type)
-                    .ThenBy(l => l.Name)
-                    .ToListAsync();
-
-                var locationDtos = locations.Select(l => new LocationDto
-                {
-                    Id = l.Id,
-                    Name = l.Name,
-                    Type = l.Type,
-                    Code = l.Code,
-                    ParentId = l.ParentId,
-                    ParentName = l.Parent?.Name,
-                    IsActive = l.IsActive,
-                    CreatedAt = l.CreatedAt,
-                    UpdatedAt = l.UpdatedAt
-                }).ToList();
-
-                return Ok(locationDtos);
-            }
-            catch (Exception ex)
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error retrieving locations");
-                return StatusCode(500, new { message = "An error occurred while retrieving locations" });
+                return Ok(result.Value);
             }
+
+            _logger.LogError("Error retrieving locations: {ErrorMessage}", result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<LocationDto>> GetLocation(int id)
         {
-            try
+            var query = new GetLocationByIdQuery(id);
+            var result = await _getLocationByIdHandler.Handle(query, CancellationToken.None);
+
+            if (result.IsSuccess)
             {
-                var location = await _context.Locations
-                    .Include(l => l.Parent)
-                    .Include(l => l.Children)
-                    .FirstOrDefaultAsync(l => l.Id == id);
-
-                if (location == null)
-                {
-                    return NotFound(new { message = "Location not found" });
-                }
-
-                var locationDto = new LocationDto
-                {
-                    Id = location.Id,
-                    Name = location.Name,
-                    Type = location.Type,
-                    Code = location.Code,
-                    ParentId = location.ParentId,
-                    ParentName = location.Parent?.Name,
-                    IsActive = location.IsActive,
-                    CreatedAt = location.CreatedAt,
-                    UpdatedAt = location.UpdatedAt,
-                    Children = location.Children.Select(c => new LocationDto
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Type = c.Type,
-                        Code = c.Code,
-                        IsActive = c.IsActive
-                    }).ToList()
-                };
-
-                return Ok(locationDto);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
+
+            if (result.Error == "Location not found")
             {
-                _logger.LogError(ex, "Error retrieving location with ID {LocationId}", id);
-                return StatusCode(500, new { message = "An error occurred while retrieving the location" });
+                return NotFound(new { message = result.Error });
             }
+
+            _logger.LogError("Error retrieving location with ID {LocationId}: {ErrorMessage}", id, result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpPost]
         public async Task<ActionResult<LocationDto>> CreateLocation([FromBody] CreateLocationRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Validate location type
-                var validTypes = new[] { "country", "city", "airport" };
-                if (!validTypes.Contains(request.Type.ToLower()))
-                {
-                    return BadRequest(new { message = "Invalid location type. Must be country, city, or airport." });
-                }
-
-                // Validate parent relationship
-                if (request.ParentId.HasValue)
-                {
-                    var parent = await _context.Locations.FindAsync(request.ParentId.Value);
-                    if (parent == null)
-                    {
-                        return BadRequest(new { message = "Parent location not found" });
-                    }
-
-                    // Business rule: countries cannot have parents
-                    if (request.Type.ToLower() == "country")
-                    {
-                        return BadRequest(new { message = "Countries cannot have parent locations" });
-                    }
-                }
-
-                var location = new Location
-                {
-                    Name = request.Name,
-                    Type = request.Type.ToLower(),
-                    Code = request.Code,
-                    ParentId = request.ParentId,
-                    IsActive = request.IsActive,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = User.Identity?.Name
-                };
-
-                _context.Locations.Add(location);
-                await _context.SaveChangesAsync();
-
-                // Reload with parent information
-                await _context.Entry(location)
-                    .Reference(l => l.Parent)
-                    .LoadAsync();
-
-                var locationDto = new LocationDto
-                {
-                    Id = location.Id,
-                    Name = location.Name,
-                    Type = location.Type,
-                    Code = location.Code,
-                    ParentId = location.ParentId,
-                    ParentName = location.Parent?.Name,
-                    IsActive = location.IsActive,
-                    CreatedAt = location.CreatedAt,
-                    UpdatedAt = location.UpdatedAt
-                };
-
-                return CreatedAtAction(nameof(GetLocation), new { id = location.Id }, locationDto);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            var command = new CreateLocationCommand
             {
-                _logger.LogError(ex, "Error creating location");
-                return StatusCode(500, new { message = "An error occurred while creating the location" });
+                Name = request.Name,
+                Type = request.Type,
+                Code = request.Code,
+                ParentId = request.ParentId,
+                IsActive = request.IsActive
+            };
+
+            var result = await _createLocationHandler.Handle(command, CancellationToken.None);
+
+            if (result.IsSuccess)
+            {
+                return CreatedAtAction(nameof(GetLocation), new { id = result.Value.Id }, result.Value);
             }
+
+            if (result.Error.Contains("not found") || result.Error.Contains("Invalid"))
+            {
+                return BadRequest(new { message = result.Error });
+            }
+
+            _logger.LogError("Error creating location: {ErrorMessage}", result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<LocationDto>> UpdateLocation(int id, [FromBody] UpdateLocationRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var location = await _context.Locations
-                    .Include(l => l.Parent)
-                    .FirstOrDefaultAsync(l => l.Id == id);
-
-                if (location == null)
-                {
-                    return NotFound(new { message = "Location not found" });
-                }
-
-                // Validate parent relationship if changed
-                if (request.ParentId.HasValue && request.ParentId != location.ParentId)
-                {
-                    var parent = await _context.Locations.FindAsync(request.ParentId.Value);
-                    if (parent == null)
-                    {
-                        return BadRequest(new { message = "Parent location not found" });
-                    }
-
-                    // Prevent circular references
-                    if (request.ParentId == id)
-                    {
-                        return BadRequest(new { message = "Location cannot be its own parent" });
-                    }
-                }
-
-                location.Name = request.Name;
-                location.Code = request.Code;
-                location.ParentId = request.ParentId;
-                location.IsActive = request.IsActive;
-                location.UpdatedAt = DateTime.UtcNow;
-                location.UpdatedBy = User.Identity?.Name;
-
-                await _context.SaveChangesAsync();
-
-                // Reload with parent information
-                await _context.Entry(location)
-                    .Reference(l => l.Parent)
-                    .LoadAsync();
-
-                var locationDto = new LocationDto
-                {
-                    Id = location.Id,
-                    Name = location.Name,
-                    Type = location.Type,
-                    Code = location.Code,
-                    ParentId = location.ParentId,
-                    ParentName = location.Parent?.Name,
-                    IsActive = location.IsActive,
-                    CreatedAt = location.CreatedAt,
-                    UpdatedAt = location.UpdatedAt
-                };
-
-                return Ok(locationDto);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            var command = new UpdateLocationCommand
             {
-                _logger.LogError(ex, "Error updating location with ID {LocationId}", id);
-                return StatusCode(500, new { message = "An error occurred while updating the location" });
+                Id = id,
+                Name = request.Name,
+                Type = request.Type,
+                Code = request.Code,
+                ParentId = request.ParentId,
+                IsActive = request.IsActive
+            };
+
+            var result = await _updateLocationHandler.Handle(command, CancellationToken.None);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
             }
+
+            if (result.Error == "Location not found")
+            {
+                return NotFound(new { message = result.Error });
+            }
+
+            if (result.Error.Contains("not found") || result.Error.Contains("cannot"))
+            {
+                return BadRequest(new { message = result.Error });
+            }
+
+            _logger.LogError("Error updating location with ID {LocationId}: {ErrorMessage}", id, result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteLocation(int id)
         {
-            try
+            var command = new DeleteLocationCommand(id);
+            var result = await _deleteLocationHandler.Handle(command, CancellationToken.None);
+
+            if (result.IsSuccess)
             {
-                var location = await _context.Locations
-                    .Include(l => l.Children)
-                    .FirstOrDefaultAsync(l => l.Id == id);
-
-                if (location == null)
-                {
-                    return NotFound(new { message = "Location not found" });
-                }
-
-                // Check if location has children
-                if (location.Children.Any())
-                {
-                    return BadRequest(new { message = "Cannot delete location with child locations" });
-                }
-
-                // Check if location is referenced by other entities (tickets, etc.)
-                // Add additional checks here as needed based on your business logic
-
-                _context.Locations.Remove(location);
-                await _context.SaveChangesAsync();
-
                 return NoContent();
             }
-            catch (Exception ex)
+
+            if (result.Error == "Location not found")
             {
-                _logger.LogError(ex, "Error deleting location with ID {LocationId}", id);
-                return StatusCode(500, new { message = "An error occurred while deleting the location" });
+                return NotFound(new { message = result.Error });
             }
+
+            if (result.Error.Contains("Cannot delete"))
+            {
+                return BadRequest(new { message = result.Error });
+            }
+
+            _logger.LogError("Error deleting location with ID {LocationId}: {ErrorMessage}", id, result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpGet("countries")]
-        public async Task<ActionResult<List<LocationDto>>> GetCountries()
+        public async Task<ActionResult<List<LocationDto>>> GetCountries([FromQuery] bool? isActive = null)
         {
-            try
-            {
-                var countries = await _context.Locations
-                    .Where(l => l.Type == "country" && l.IsActive)
-                    .OrderBy(l => l.Name)
-                    .ToListAsync();
+            var query = new GetCountriesQuery { IsActive = isActive };
+            var result = await _getCountriesHandler.Handle(query, CancellationToken.None);
 
-                var countryDtos = countries.Select(c => new LocationDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Type = c.Type,
-                    Code = c.Code,
-                    IsActive = c.IsActive
-                }).ToList();
-
-                return Ok(countryDtos);
-            }
-            catch (Exception ex)
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error retrieving countries");
-                return StatusCode(500, new { message = "An error occurred while retrieving countries" });
+                return Ok(result.Value);
             }
+
+            _logger.LogError("Error retrieving countries: {ErrorMessage}", result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
 
         [HttpGet("cities/{countryId}")]
-        public async Task<ActionResult<List<LocationDto>>> GetCitiesByCountry(int countryId)
+        public async Task<ActionResult<List<LocationDto>>> GetCitiesByCountry(int countryId, [FromQuery] bool? isActive = null)
         {
-            try
-            {
-                var cities = await _context.Locations
-                    .Where(l => l.Type == "city" && l.ParentId == countryId && l.IsActive)
-                    .OrderBy(l => l.Name)
-                    .ToListAsync();
+            var query = new GetCitiesByCountryQuery(countryId)
+            { 
+                IsActive = isActive
+            };
+            var result = await _getCitiesByCountryHandler.Handle(query, CancellationToken.None);
 
-                var cityDtos = cities.Select(c => new LocationDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Type = c.Type,
-                    Code = c.Code,
-                    ParentId = c.ParentId,
-                    IsActive = c.IsActive
-                }).ToList();
-
-                return Ok(cityDtos);
-            }
-            catch (Exception ex)
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error retrieving cities for country {CountryId}", countryId);
-                return StatusCode(500, new { message = "An error occurred while retrieving cities" });
+                return Ok(result.Value);
             }
+
+            _logger.LogError("Error retrieving cities for country {CountryId}: {ErrorMessage}", countryId, result.Error);
+            return StatusCode(500, new { message = result.Error });
         }
     }
+}
 
-    public class LocationDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string? Code { get; set; }
-        public int? ParentId { get; set; }
-        public string? ParentName { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public List<LocationDto> Children { get; set; } = new List<LocationDto>();
-    }
+public class CreateLocationRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string? Code { get; set; }
+    public int? ParentId { get; set; }
+    public bool IsActive { get; set; } = true;
+}
 
-    public class CreateLocationRequest
-    {
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(20)]
-        public string Type { get; set; } = string.Empty;
-
-        [MaxLength(10)]
-        public string? Code { get; set; }
-
-        public int? ParentId { get; set; }
-
-        public bool IsActive { get; set; } = true;
-    }
-
-    public class UpdateLocationRequest
-    {
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [MaxLength(10)]
-        public string? Code { get; set; }
-
-        public int? ParentId { get; set; }
-
-        public bool IsActive { get; set; } = true;
-    }
+public class UpdateLocationRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string? Code { get; set; }
+    public int? ParentId { get; set; }
+    public bool IsActive { get; set; } = true;
 }

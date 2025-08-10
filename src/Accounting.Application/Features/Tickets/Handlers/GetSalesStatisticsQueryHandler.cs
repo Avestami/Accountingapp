@@ -110,7 +110,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     MonthlySales = monthlyTrend
                 };
 
-                return Result.Success(statistics);
+                return Result<SalesStatisticsDto>.Success(statistics);
             }
             catch (Exception ex)
             {

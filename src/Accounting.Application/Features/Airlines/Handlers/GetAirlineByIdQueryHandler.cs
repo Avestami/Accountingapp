@@ -42,7 +42,7 @@ namespace Accounting.Application.Features.Airlines.Handlers
                     Company = airline.Company
                 };
 
-                return Result.Success(airlineDto);
+                return Result<AirlineDto>.Success(airlineDto);
             }
             catch (System.Exception ex)
             {

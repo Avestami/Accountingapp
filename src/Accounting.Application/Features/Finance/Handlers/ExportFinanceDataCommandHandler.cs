@@ -112,7 +112,7 @@ namespace Accounting.Application.Features.Finance.Handlers
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
-            return Result.Success(bytes);
+            return Result<byte[]>.Success(bytes);
         }
 
         private IQueryable<T> ApplyFilters<T>(IQueryable<T> query, ExportFinanceDataCommand request) where T : class

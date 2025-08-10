@@ -1,7 +1,7 @@
 using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
-using MediatR;
+using Accounting.Application.Common.Queries;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,13 +10,23 @@ using System.Text.Json;
 
 namespace Accounting.Application.Features.Reports.Handlers
 {
-    public class ExportReportQueryHandler : IRequestHandler<ExportReportQuery, Result<byte[]>>
+    public class ExportReportQueryHandler : IQueryHandler<ExportReportQuery, Result<byte[]>>
     {
-        private readonly IMediator _mediator;
+        private readonly IQueryHandler<GetFinancialReportQuery, Result<FinancialReportDto>> _financialReportHandler;
+        private readonly IQueryHandler<GetSalesReportQuery, Result<SalesReportDto>> _salesReportHandler;
+        private readonly IQueryHandler<GetProfitLossReportQuery, Result<ProfitLossReportDto>> _profitLossReportHandler;
+        private readonly IQueryHandler<GetBalanceSheetReportQuery, Result<BalanceSheetReportDto>> _balanceSheetReportHandler;
 
-        public ExportReportQueryHandler(IMediator mediator)
+        public ExportReportQueryHandler(
+            IQueryHandler<GetFinancialReportQuery, Result<FinancialReportDto>> financialReportHandler,
+            IQueryHandler<GetSalesReportQuery, Result<SalesReportDto>> salesReportHandler,
+            IQueryHandler<GetProfitLossReportQuery, Result<ProfitLossReportDto>> profitLossReportHandler,
+            IQueryHandler<GetBalanceSheetReportQuery, Result<BalanceSheetReportDto>> balanceSheetReportHandler)
         {
-            _mediator = mediator;
+            _financialReportHandler = financialReportHandler;
+            _salesReportHandler = salesReportHandler;
+            _profitLossReportHandler = profitLossReportHandler;
+            _balanceSheetReportHandler = balanceSheetReportHandler;
         }
 
         public async Task<Result<byte[]>> Handle(ExportReportQuery request, CancellationToken cancellationToken)
@@ -33,7 +43,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                             StartDate = request.StartDate,
                             EndDate = request.EndDate
                         };
-                        var financialResult = await _mediator.Send(financialQuery, cancellationToken);
+                        var financialResult = await _financialReportHandler.Handle(financialQuery, cancellationToken);
                         if (!financialResult.IsSuccess)
                             return Result.Failure<byte[]>(financialResult.Error);
                         
@@ -46,7 +56,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                             StartDate = request.StartDate,
                             EndDate = request.EndDate
                         };
-                        var salesResult = await _mediator.Send(salesQuery, cancellationToken);
+                        var salesResult = await _salesReportHandler.Handle(salesQuery, cancellationToken);
                         if (!salesResult.IsSuccess)
                             return Result.Failure<byte[]>(salesResult.Error);
                         
@@ -59,7 +69,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                             StartDate = request.StartDate,
                             EndDate = request.EndDate
                         };
-                        var plResult = await _mediator.Send(plQuery, cancellationToken);
+                        var plResult = await _profitLossReportHandler.Handle(plQuery, cancellationToken);
                         if (!plResult.IsSuccess)
                             return Result.Failure<byte[]>(plResult.Error);
                         
@@ -71,7 +81,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         {
                             AsOfDate = request.EndDate
                         };
-                        var bsResult = await _mediator.Send(bsQuery, cancellationToken);
+                        var bsResult = await _balanceSheetReportHandler.Handle(bsQuery, cancellationToken);
                         if (!bsResult.IsSuccess)
                             return Result.Failure<byte[]>(bsResult.Error);
                         
@@ -82,7 +92,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         return Result.Failure<byte[]>($"Unknown report type: {request.ReportType}");
                 }
 
-                return Result.Success(data);
+                return Result<byte[]>.Success(data);
             }
             catch (Exception ex)
             {

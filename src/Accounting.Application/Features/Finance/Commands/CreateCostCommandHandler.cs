@@ -100,7 +100,7 @@ namespace Accounting.Application.Features.Finance.Commands
                 await CreateLedgerEntriesAsync(cost, cancellationToken);
 
                 var costDto = _mapper.Map<CostDto>(cost);
-                return Result.Success(costDto);
+                return Result<CostDto>.Success(costDto);
             }
             catch (Exception ex)
             {

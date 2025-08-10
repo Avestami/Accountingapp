@@ -56,7 +56,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     UpdatedAt = income.UpdatedAt
                 };
 
-                return Result.Success(incomeDto);
+                return Result<IncomeDto>.Success(incomeDto);
             }
             catch (System.Exception ex)
             {

@@ -50,15 +50,15 @@ namespace Accounting.API.Controllers
 
                 var response = new
                 {
-                    id = userProfile.Id,
+                    id = userProfile.Value.Id,
                     username = GetCurrentUsername(),
-                    firstName = userProfile.FirstName,
-                    lastName = userProfile.LastName,
-                    fullName = $"{userProfile.FirstName} {userProfile.LastName}".Trim(),
-                    email = userProfile.Email,
+                    firstName = userProfile.Value.FirstName,
+                    lastName = userProfile.Value.LastName,
+                    fullName = $"{userProfile.Value.FirstName} {userProfile.Value.LastName}".Trim(),
+                    email = userProfile.Value.Email,
                     role = GetCurrentUserRole(),
                     company = "demo",
-                    profilePicture = userProfile.ProfilePicture,
+                    profilePicture = userProfile.Value.ProfilePicture,
                     isActive = true,
                     createdAt = DateTime.UtcNow.AddDays(-30),
                     lastLoginAt = DateTime.UtcNow

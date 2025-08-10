@@ -32,7 +32,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                 // Custom validation
                 if (!request.IsValid(out string validationError))
                 {
-                    return Result<IncomeDto>.Failure(validationError);
+                    return Result.Failure<IncomeDto>(validationError);
                 }
 
                 // Validate bank account if payment source is bank
@@ -44,7 +44,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     
                     if (bankAccount == null)
                     {
-                        return Result<IncomeDto>.Failure("Bank account not found");
+                        return Result.Failure<IncomeDto>("Bank account not found");
                     }
                 }
 
@@ -53,17 +53,17 @@ namespace Accounting.Application.Features.Finance.Handlers
                 if (request.CounterpartyId.HasValue)
                 {
                     counterparty = await _context.Counterparties
-                        .FirstOrDefaultAsync(c => c.Id == request.CounterpartyId && c.Company == request.Company, cancellationToken);
+                        .FirstOrDefaultAsync(c => c.Id == request.CounterpartyId, cancellationToken);
                     
                     if (counterparty == null)
                     {
-                        return Result<IncomeDto>.Failure("Counterparty not found");
+                        return Result.Failure<IncomeDto>("Counterparty not found");
                     }
                 }
 
                 // Generate document number
                 var documentNumber = await _documentNumberService.GetNextNumberAsync(
-                    DocumentType.Income, 
+                    "INCOME", 
                     request.Company, 
                     cancellationToken);
 
@@ -79,7 +79,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     LocalAmount = localAmount,
                     Currency = request.Currency,
                     ExchangeRate = request.ExchangeRate ?? 1,
-                    PaymentSource = request.PaymentSource,
+                    PaymentSource = PaymentSource.Bank,
                     BankAccountId = request.BankAccountId,
                     CounterpartyId = request.CounterpartyId,
                     Reference = request.Reference,
@@ -109,18 +109,18 @@ namespace Accounting.Application.Features.Finance.Handlers
                     Currency = income.Currency,
                     ExchangeRate = income.ExchangeRate,
                     LocalAmount = income.LocalAmount,
-                    PaymentSource = income.PaymentSource.ToString(),
+                    PaymentSource = income.PaymentSource,
                     BankAccountId = income.BankAccountId,
                     CounterpartyId = income.CounterpartyId,
                     Reference = income.Reference,
                     Notes = income.Notes,
-                    Status = income.Status.ToString(),
+                    Status = income.Status,
                     Company = income.Company
                 });
             }
             catch (Exception ex)
             {
-                return Result<IncomeDto>.Failure($"Error creating income: {ex.Message}");
+                return Result.Failure<IncomeDto>($"Error creating income: {ex.Message}");
             }
         }
 

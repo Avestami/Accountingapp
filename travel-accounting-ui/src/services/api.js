@@ -447,6 +447,13 @@ export const locationsApi = {
   }
 }
 
+// Audit Logs API
+export const auditLogsApi = {
+  async get(params = {}) {
+    return apiClient.get('/auditlogs', params)
+  }
+}
+
 // Dashboard API
 export const dashboardApi = {
   async getDashboardStats(params = {}) {
