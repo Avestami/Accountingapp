@@ -9,6 +9,7 @@ namespace Accounting.Application.Features.Tickets.Commands
         public int Id { get; }
         public string Reason { get; }
         public string? Notes { get; }
+        public string? CancelledBy { get; set; }
 
         public CancelTicketCommand(int id, string reason, string? notes = null)
         {

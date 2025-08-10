@@ -1,6 +1,8 @@
 using Accounting.Application.Common.Models;
+using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
+using Accounting.Domain.Entities;
 using Accounting.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +34,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                 var voucherEntries = await _context.VoucherEntries
                     .Include(ve => ve.Voucher)
                     .Include(ve => ve.Account)
-                    .Where(ve => ve.Voucher.Date <= request.AsOfDate)
+                    .Where(ve => ve.Voucher.VoucherDate <= request.AsOfDate)
                     .ToListAsync(cancellationToken);
 
                 // Calculate account balances
@@ -43,11 +45,11 @@ namespace Accounting.Application.Features.Reports.Handlers
                     var account = accounts.First(a => a.Id == entry.AccountId);
                     var balance = account.Type switch
                     {
-                        AccountType.Asset => entry.Debit - entry.Credit,
-                        AccountType.Liability => entry.Credit - entry.Debit,
-                        AccountType.Equity => entry.Credit - entry.Debit,
-                        AccountType.Revenue => entry.Credit - entry.Debit,
-                        AccountType.Expense => entry.Debit - entry.Credit,
+                        AccountType.Asset => entry.TransactionType == TransactionType.Debit ? entry.Amount : -entry.Amount,
+                        AccountType.Liability => entry.TransactionType == TransactionType.Credit ? entry.Amount : -entry.Amount,
+                        AccountType.Equity => entry.TransactionType == TransactionType.Credit ? entry.Amount : -entry.Amount,
+                        AccountType.Revenue => entry.TransactionType == TransactionType.Credit ? entry.Amount : -entry.Amount,
+                        AccountType.Expense => entry.TransactionType == TransactionType.Debit ? entry.Amount : -entry.Amount,
                         _ => 0
                     };
                     accountBalances[entry.AccountId] += balance;

@@ -5,6 +5,7 @@ using Accounting.Application.Features.Users.Commands;
 using Accounting.Application.Features.Users.Queries;
 using Accounting.Application.DTOs;
 using Accounting.Application.Common.Models;
+using System.Threading.Tasks;
 
 namespace Accounting.API.Controllers
 {
@@ -82,7 +83,7 @@ namespace Accounting.API.Controllers
                 return BadRequest(result);
             }
 
-            return CreatedAtAction(nameof(GetUser), new { id = result.Data.Id }, result);
+            return CreatedAtAction(nameof(GetUser), new { id = result.Value.Id }, result);
         }
 
         /// <summary>
@@ -146,7 +147,7 @@ namespace Accounting.API.Controllers
                 return NotFound(getUserResult);
             }
 
-            var user = getUserResult.Data;
+            var user = getUserResult.Value;
 
             // Update only the status
             var updateCommand = new UpdateUserCommand

@@ -71,7 +71,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     ToBankAccountId = request.ToAccountId,
                     Reference = request.Reference,
                     Notes = request.Notes,
-                    Status = TransferStatus.Draft,
+                    Status = Accounting.Domain.Entities.TransferStatus.Draft,
                     Company = request.Company,
                     CreatedAt = DateTime.UtcNow
                 };

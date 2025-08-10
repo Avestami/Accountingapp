@@ -17,6 +17,7 @@ namespace Accounting.Application.Features.Tickets.Commands
         public string Currency { get; set; } = "IRR";
         public TicketType Type { get; set; }
         public List<UpdateTicketItemDto> Items { get; set; } = new List<UpdateTicketItemDto>();
+        public string? UpdatedBy { get; set; }
     }
 
     public class UpdateTicketItemDto

@@ -1,4 +1,5 @@
 using Accounting.Application.Common.Models;
+using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
@@ -111,7 +112,7 @@ namespace Accounting.Application.Features.Reports.Handlers
 
                 var grossProfit = totalRevenue - totalExpenses;
                 var netProfit = grossProfit; // Simplified - in real scenario, would include other income/expenses
-                var profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+                var profitMargin = totalRevenue > 0 ? (double)(netProfit / totalRevenue) * 100 : 0;
 
                 var report = new ProfitLossReportDto
                 {

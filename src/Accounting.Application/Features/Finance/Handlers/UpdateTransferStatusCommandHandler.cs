@@ -37,18 +37,18 @@ namespace Accounting.Application.Features.Finance.Handlers
                 }
 
                 // Validate status transition
-                if (transfer.Status == TransferStatus.Completed || transfer.Status == TransferStatus.Cancelled)
+                if (transfer.Status == Accounting.Domain.Entities.TransferStatus.Posted || transfer.Status == Accounting.Domain.Entities.TransferStatus.Cancelled)
                 {
                     return Result.Failure<TransferDto>("Cannot update status of completed or cancelled transfer");
                 }
 
-                if (request.Status == TransferStatus.Pending)
+                if ((Accounting.Domain.Entities.TransferStatus)request.Status == Accounting.Domain.Entities.TransferStatus.Draft)
                 {
-                    return Result.Failure<TransferDto>("Cannot set status back to pending");
+                    return Result.Failure<TransferDto>("Cannot set status back to draft");
                 }
 
                 // Update transfer status
-                transfer.Status = request.Status;
+                transfer.Status = (Accounting.Domain.Entities.TransferStatus)request.Status;
                 transfer.UpdatedAt = System.DateTime.UtcNow;
                 
                 if (!string.IsNullOrEmpty(request.Notes))

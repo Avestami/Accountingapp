@@ -14,7 +14,7 @@ namespace Accounting.Application.Features.Finance.Commands
         public int Id { get; set; }
         
         [Required]
-        public TransferStatus Status { get; set; }
+        public Accounting.Domain.Enums.TransferStatus Status { get; set; }
         
         [Required]
         [MaxLength(50)]

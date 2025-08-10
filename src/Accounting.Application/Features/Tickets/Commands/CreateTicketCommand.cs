@@ -29,6 +29,8 @@ namespace Accounting.Application.Features.Tickets.Commands
         public TicketType Type { get; set; } = TicketType.Travel;
 
         public List<CreateTicketItemDto> Items { get; set; } = new List<CreateTicketItemDto>();
+        
+        public string? CreatedBy { get; set; }
     }
 
     public class CreateTicketItemDto

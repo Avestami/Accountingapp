@@ -8,6 +8,7 @@ using Accounting.Application.Common.Queries;
 using Accounting.Application.DTOs;
 using Accounting.Application.Features.Users.Queries;
 using Accounting.Application.Interfaces;
+using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Users.Handlers
 {
@@ -24,7 +25,8 @@ namespace Accounting.Application.Features.Users.Handlers
         {
             try
             {
-                var query = _unitOfWork.Users.AsQueryable();
+                var allUsers = await _unitOfWork.Users.GetAllAsync();
+                var query = allUsers.AsQueryable();
 
                 // Apply filters
                 if (!string.IsNullOrEmpty(request.SearchTerm))
@@ -49,11 +51,9 @@ namespace Accounting.Application.Features.Users.Handlers
                     query = query.Where(u => u.IsActive == request.IsActive.Value);
                 }
 
-                // Get total count
-                var totalCount = await query.CountAsync();
+                var totalCount = query.Count();
 
-                // Apply pagination
-                var users = await query
+                var users = query
                     .OrderBy(u => u.Username)
                     .Skip((request.Page - 1) * request.PageSize)
                     .Take(request.PageSize)
@@ -65,13 +65,11 @@ namespace Accounting.Application.Features.Users.Handlers
                         FirstName = u.FirstName,
                         LastName = u.LastName,
                         Role = u.Role,
-                        Department = u.Department,
-                        Position = u.Position,
                         IsActive = u.IsActive,
                         CreatedAt = u.CreatedAt,
-                        UpdatedAt = u.UpdatedAt
+                        UpdatedAt = u.UpdatedAt ?? DateTime.UtcNow
                     })
-                    .ToListAsync();
+                    .ToList();
 
                 var pagedResult = new PagedResult<UserDto>(
                     users,

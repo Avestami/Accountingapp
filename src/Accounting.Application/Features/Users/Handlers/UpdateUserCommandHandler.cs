@@ -56,12 +56,10 @@ namespace Accounting.Application.Features.Users.Handlers
                 user.FirstName = request.FirstName;
                 user.LastName = request.LastName;
                 user.Role = request.Role;
-                user.Department = request.Department;
-                user.Position = request.Position;
                 user.IsActive = request.IsActive;
                 user.UpdatedAt = DateTime.UtcNow;
 
-                _unitOfWork.Users.Update(user);
+                await _unitOfWork.Users.UpdateAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
                 var userDto = new UserDto
@@ -72,11 +70,9 @@ namespace Accounting.Application.Features.Users.Handlers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Role = user.Role,
-                    Department = user.Department,
-                    Position = user.Position,
                     IsActive = user.IsActive,
                     CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
+                    UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow
                 };
 
                 return Result.Success(userDto);

@@ -31,18 +31,18 @@ namespace Accounting.Application.Features.Reports.Services
                 var query = _context.Tickets.AsQueryable();
 
                 // Apply filters
-                query = ApplyDateFilter(query, t => t.RequestDate, filter.DateFrom, filter.DateTo);
+                query = ApplyDateFilter(query, t => t.RequestDate, filter.StartDate, filter.EndDate);
                 query = ApplySearchFilter(query, filter.SearchTerm);
                 query = ApplyAirlineFilter(query, filter.Airlines);
                 query = ApplyDestinationFilter(query, filter.Destinations);
-                query = ApplyStatusFilter(query, filter.StatusFilters);
+                query = ApplyStatusFilter(query, filter.Statuses);
 
                 var tickets = await query.ToListAsync(cancellationToken);
 
                 var report = new SalesReportDto
                 {
-                    StartDate = filter.DateFrom ?? DateTime.MinValue,
-                    EndDate = filter.DateTo ?? DateTime.MaxValue,
+                    StartDate = filter.StartDate,
+                    EndDate = filter.EndDate,
                     TotalTickets = tickets.Count,
                     IssuedTickets = tickets.Count(t => t.Status == TicketStatus.Completed),
                 CancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled),
@@ -52,7 +52,7 @@ namespace Accounting.Application.Features.Reports.Services
                     : 0,
                     TicketsByAirline = await GetTicketsByAirlineAsync(tickets, cancellationToken),
                     TicketsByDestination = await GetTicketsByDestinationAsync(tickets, cancellationToken),
-                    MonthlySummary = GetMonthlySummary(tickets, filter.DateFrom, filter.DateTo)
+                    MonthlySummary = GetMonthlySummary(tickets, filter.StartDate, filter.EndDate)
                 };
 
                 return Result.Success(report);
@@ -71,14 +71,14 @@ namespace Accounting.Application.Features.Reports.Services
 
                 // Get income data
                 var incomeQuery = _context.Incomes.AsQueryable();
-                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.DateFrom, filter.DateTo);
-                incomeQuery = ApplyCategoryFilter(incomeQuery, i => i.Category, filter.Categories);
+                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.StartDate, filter.EndDate);
+                incomeQuery = ApplyCategoryFilter(incomeQuery, i => i.Description, filter.Categories);
                 var incomes = await incomeQuery.ToListAsync(cancellationToken);
 
                 // Get cost data
                 var costQuery = _context.Costs.AsQueryable();
-                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.DateFrom, filter.DateTo);
-                costQuery = ApplyCategoryFilter(costQuery, c => c.Category, filter.Categories);
+                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.StartDate, filter.EndDate);
+                costQuery = ApplyCategoryFilter(costQuery, c => c.Description, filter.Categories);
                 var costs = await costQuery.ToListAsync(cancellationToken);
 
                 var totalIncome = incomes.Sum(i => i.Amount);
@@ -86,26 +86,26 @@ namespace Accounting.Application.Features.Reports.Services
 
                 var report = new FinancialReportDto
                 {
-                    StartDate = filter.DateFrom ?? DateTime.MinValue,
-                    EndDate = filter.DateTo ?? DateTime.MaxValue,
-                    TotalIncome = totalIncome,
-                    TotalCosts = totalCosts,
+                    StartDate = filter.StartDate,
+                    EndDate = filter.EndDate,
+                    TotalIncome = (decimal)totalIncome,
+                    TotalCosts = (decimal)totalCosts,
                     NetProfit = totalIncome - totalCosts,
-                    IncomeItems = incomes.GroupBy(i => i.Category)
-                        .Select(g => new FinancialItemDto
+                    IncomeItems = incomes.GroupBy(i => i.Description)
+                        .Select(g => new FinancialReportItemDto
                         {
                             Category = g.Key,
                             Amount = g.Sum(i => i.Amount),
                             TransactionCount = g.Count()
                         }).ToList(),
-                    CostItems = costs.GroupBy(c => c.Category)
-                        .Select(g => new FinancialItemDto
+                    CostItems = costs.GroupBy(c => c.Description)
+                        .Select(g => new FinancialReportItemDto
                         {
                             Category = g.Key,
                             Amount = g.Sum(c => c.Amount),
                             TransactionCount = g.Count()
                         }).ToList(),
-                    MonthlySummary = GetFinancialMonthlySummary(incomes, costs, filter.DateFrom, filter.DateTo)
+                    MonthlySummary = GetFinancialMonthlySummary(incomes, costs, filter.StartDate, filter.EndDate)
                 };
 
                 return Result.Success(report);
@@ -124,17 +124,17 @@ namespace Accounting.Application.Features.Reports.Services
 
                 // Get revenue from tickets
                 var ticketQuery = _context.Tickets.Where(t => t.Status == TicketStatus.Completed);
-                ticketQuery = ApplyDateFilter(ticketQuery, t => t.RequestDate, filter.DateFrom, filter.DateTo);
+                ticketQuery = ApplyDateFilter(ticketQuery, t => t.RequestDate, filter.StartDate, filter.EndDate);
                 var ticketRevenue = await ticketQuery.SumAsync(t => t.Amount, cancellationToken);
 
                 // Get other income
                 var incomeQuery = _context.Incomes.AsQueryable();
-                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.DateFrom, filter.DateTo);
+                incomeQuery = ApplyDateFilter(incomeQuery, i => i.Date, filter.StartDate, filter.EndDate);
                 var otherIncome = await incomeQuery.SumAsync(i => i.Amount, cancellationToken);
 
                 // Get costs
                 var costQuery = _context.Costs.AsQueryable();
-                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.DateFrom, filter.DateTo);
+                costQuery = ApplyDateFilter(costQuery, c => c.Date, filter.StartDate, filter.EndDate);
                 var costs = await costQuery.ToListAsync(cancellationToken);
 
                 var totalRevenue = ticketRevenue + otherIncome;
@@ -142,25 +142,25 @@ namespace Accounting.Application.Features.Reports.Services
 
                 var report = new ProfitLossReportDto
                 {
-                    StartDate = filter.DateFrom ?? DateTime.MinValue,
-                    EndDate = filter.DateTo ?? DateTime.MaxValue,
+                    StartDate = filter.StartDate,
+                    EndDate = filter.EndDate,
                     Revenue = new RevenueBreakdownDto
                     {
                         TicketSales = ticketRevenue,
                         OtherIncome = otherIncome,
                         TotalRevenue = totalRevenue
                     },
-                    Expenses = costs.GroupBy(c => c.Category)
+                    Expenses = costs.GroupBy(c => c.Description ?? "Other")
                         .Select(g => new ExpenseItemDto
                         {
                             Category = g.Key,
                             Amount = g.Sum(c => c.Amount),
-                            Percentage = totalCosts > 0 ? (g.Sum(c => c.Amount) / totalCosts) * 100 : 0
+                            Percentage = totalCosts > 0 ? (double)g.Sum(c => c.Amount) / (double)totalCosts * 100 : 0
                         }).ToList(),
                     TotalExpenses = totalCosts,
                     GrossProfit = totalRevenue - totalCosts,
                     NetProfit = totalRevenue - totalCosts, // Simplified for now
-                    ProfitMargin = totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0
+                    ProfitMargin = totalRevenue > 0 ? (double)(totalRevenue - totalCosts) / (double)totalRevenue * 100 : 0
                 };
 
                 return Result.Success(report);
@@ -177,20 +177,17 @@ namespace Accounting.Application.Features.Reports.Services
             {
                 filter.Validate();
 
-                // Get bank balances
-                var banks = await _context.Banks.ToListAsync(cancellationToken);
-                var totalCash = banks.Sum(b => b.Balance);
+                // Get bank account balances using OpeningBalance
+                var bankAccounts = await _context.BankAccounts.ToListAsync(cancellationToken);
+                var totalCash = bankAccounts.Sum(ba => ba.OpeningBalance);
 
                 // Get vouchers (accounts receivable/payable)
                 var voucherQuery = _context.Vouchers.AsQueryable();
-                if (filter.DateTo.HasValue)
-                {
-                    voucherQuery = voucherQuery.Where(v => v.Date <= filter.DateTo.Value);
-                }
+                voucherQuery = voucherQuery.Where(v => v.VoucherDate <= filter.EndDate);
                 var vouchers = await voucherQuery.ToListAsync(cancellationToken);
 
-                var accountsReceivable = vouchers.Where(v => v.Type == "Receivable").Sum(v => v.Amount);
-                var accountsPayable = vouchers.Where(v => v.Type == "Payable").Sum(v => v.Amount);
+                var accountsReceivable = vouchers.Where(v => v.Type == VoucherType.Income).Sum(v => v.Amount);
+                var accountsPayable = vouchers.Where(v => v.Type == VoucherType.Expense).Sum(v => v.Amount);
 
                 // Calculate equity (simplified)
                 var totalAssets = totalCash + accountsReceivable;
@@ -199,30 +196,46 @@ namespace Accounting.Application.Features.Reports.Services
 
                 var report = new BalanceSheetReportDto
                 {
-                    AsOfDate = filter.DateTo ?? DateTime.Now,
-                    Assets = new AssetsDto
+                    AsOfDate = filter.EndDate,
+                    TotalAssets = totalAssets,
+                    TotalLiabilities = totalLiabilities,
+                    TotalEquity = equity,
+                    Assets = new List<BalanceSheetSectionDto>
                     {
-                        CurrentAssets = new CurrentAssetsDto
+                        new BalanceSheetSectionDto
                         {
-                            Cash = totalCash,
-                            AccountsReceivable = accountsReceivable,
-                            TotalCurrentAssets = totalCash + accountsReceivable
-                        },
-                        TotalAssets = totalAssets
+                            SectionName = "Current Assets",
+                            TotalAmount = totalCash + accountsReceivable,
+                            Items = new List<BalanceSheetItemDto>
+                            {
+                                new BalanceSheetItemDto { AccountName = "Cash", Amount = totalCash },
+                                new BalanceSheetItemDto { AccountName = "Accounts Receivable", Amount = accountsReceivable }
+                            }
+                        }
                     },
-                    Liabilities = new LiabilitiesDto
+                    Liabilities = new List<BalanceSheetSectionDto>
                     {
-                        CurrentLiabilities = new CurrentLiabilitiesDto
+                        new BalanceSheetSectionDto
                         {
-                            AccountsPayable = accountsPayable,
-                            TotalCurrentLiabilities = accountsPayable
-                        },
-                        TotalLiabilities = accountsPayable
+                            SectionName = "Current Liabilities",
+                            TotalAmount = accountsPayable,
+                            Items = new List<BalanceSheetItemDto>
+                            {
+                                new BalanceSheetItemDto { AccountName = "Accounts Payable", Amount = accountsPayable }
+                            }
+                        }
                     },
-                    Equity = new EquityDto
+                    Equity = new List<BalanceSheetSectionDto>
                     {
-                        RetainedEarnings = equity,
-                        TotalEquity = equity
+                        new BalanceSheetSectionDto
+                        {
+                            SectionName = "Equity",
+                            TotalAmount = equity,
+                            Items = new List<BalanceSheetItemDto>
+                            {
+                                new BalanceSheetItemDto { AccountName = "Retained Earnings", Amount = equity }
+                            }
+                        }
                     }
                 };
 
@@ -392,7 +405,7 @@ namespace Accounting.Application.Features.Reports.Services
             return query;
         }
 
-        private async Task<List<AirlineReportDto>> GetTicketsByAirlineAsync(List<Ticket> tickets, CancellationToken cancellationToken)
+        private async Task<List<SalesReportItemDto>> GetTicketsByAirlineAsync(List<Ticket> tickets, CancellationToken cancellationToken)
         {
             var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.Amount);
             
@@ -400,7 +413,7 @@ namespace Accounting.Application.Features.Reports.Services
                 .Where(t => t.Status == TicketStatus.Completed)
                 .SelectMany(t => t.Items)
                 .GroupBy(item => item.Airline.Name)
-                .Select(g => new AirlineReportDto
+                .Select(g => new SalesReportItemDto
                 {
                     Name = g.Key,
                     TicketCount = g.Count(),
@@ -411,7 +424,7 @@ namespace Accounting.Application.Features.Reports.Services
                 .ToList();
         }
 
-        private async Task<List<DestinationReportDto>> GetTicketsByDestinationAsync(List<Ticket> tickets, CancellationToken cancellationToken)
+        private async Task<List<SalesReportItemDto>> GetTicketsByDestinationAsync(List<Ticket> tickets, CancellationToken cancellationToken)
         {
             var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.Amount);
             
@@ -419,7 +432,7 @@ namespace Accounting.Application.Features.Reports.Services
                 .Where(t => t.Status == TicketStatus.Completed)
                 .SelectMany(t => t.Items)
                 .GroupBy(item => item.Destination.Name)
-                .Select(g => new DestinationReportDto
+                .Select(g => new SalesReportItemDto
                 {
                     Name = g.Key,
                     TicketCount = g.Count(),
@@ -430,12 +443,12 @@ namespace Accounting.Application.Features.Reports.Services
                 .ToList();
         }
 
-        private List<MonthlySummaryDto> GetMonthlySummary(List<Ticket> tickets, DateTime? dateFrom, DateTime? dateTo)
+        private List<MonthlySalesSummaryDto> GetMonthlySummary(List<Ticket> tickets, DateTime? dateFrom, DateTime? dateTo)
         {
             var startDate = dateFrom ?? tickets.Min(t => t.RequestDate);
             var endDate = dateTo ?? tickets.Max(t => t.RequestDate);
 
-            var monthlyData = new List<MonthlySummaryDto>();
+            var monthlyData = new List<MonthlySalesSummaryDto>();
             var current = new DateTime(startDate.Year, startDate.Month, 1);
 
             while (current <= endDate)
@@ -445,7 +458,7 @@ namespace Accounting.Application.Features.Reports.Services
                     t.RequestDate.Month == current.Month &&
                     t.Status == TicketStatus.Completed).ToList();
 
-                monthlyData.Add(new MonthlySummaryDto
+                monthlyData.Add(new MonthlySalesSummaryDto
                 {
                     Month = current.ToString("yyyy-MM"),
                     TicketCount = monthTickets.Count,
@@ -458,15 +471,15 @@ namespace Accounting.Application.Features.Reports.Services
             return monthlyData;
         }
 
-        private List<FinancialMonthlySummaryDto> GetFinancialMonthlySummary(List<Income> incomes, List<Cost> costs, DateTime? dateFrom, DateTime? dateTo)
+        private List<MonthlyFinancialSummaryDto> GetFinancialMonthlySummary(List<Income> incomes, List<Cost> costs, DateTime? dateFrom, DateTime? dateTo)
         {
             var allDates = incomes.Select(i => i.Date).Concat(costs.Select(c => c.Date)).ToList();
-            if (!allDates.Any()) return new List<FinancialMonthlySummaryDto>();
+            if (!allDates.Any()) return new List<MonthlyFinancialSummaryDto>();
 
             var startDate = dateFrom ?? allDates.Min();
             var endDate = dateTo ?? allDates.Max();
 
-            var monthlyData = new List<FinancialMonthlySummaryDto>();
+            var monthlyData = new List<MonthlyFinancialSummaryDto>();
             var current = new DateTime(startDate.Year, startDate.Month, 1);
 
             while (current <= endDate)
@@ -479,7 +492,7 @@ namespace Accounting.Application.Features.Reports.Services
                     c.Date.Year == current.Year && 
                     c.Date.Month == current.Month).Sum(c => c.Amount);
 
-                monthlyData.Add(new FinancialMonthlySummaryDto
+                monthlyData.Add(new MonthlyFinancialSummaryDto
                 {
                     Month = current.ToString("yyyy-MM"),
                     Income = monthIncomes,

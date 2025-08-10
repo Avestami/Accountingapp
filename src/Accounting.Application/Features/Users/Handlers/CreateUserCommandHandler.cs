@@ -50,13 +50,11 @@ namespace Accounting.Application.Features.Users.Handlers
                 var user = new User
                 {
                     Username = request.Username,
-                    Password = BCrypt.Net.BCrypt.HashPassword(request.Password), // Hash password
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password), // Hash password
                     Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Role = userRole,
-                    Department = request.Department,
-                    Position = request.Position,
                     Company = request.Company,
                     IsActive = request.IsActive,
                     CreatedAt = DateTime.UtcNow,
@@ -74,11 +72,9 @@ namespace Accounting.Application.Features.Users.Handlers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Role = user.Role,
-                    Department = user.Department,
-                    Position = user.Position,
                     IsActive = user.IsActive,
                     CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
+                    UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow
                 };
 
                 return Result.Success(userDto);

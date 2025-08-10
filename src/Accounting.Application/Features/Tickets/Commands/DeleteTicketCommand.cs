@@ -6,6 +6,7 @@ namespace Accounting.Application.Features.Tickets.Commands
     public class DeleteTicketCommand : ICommand<Result<bool>>
     {
         public int Id { get; }
+        public string? DeletedBy { get; set; }
 
         public DeleteTicketCommand(int id)
         {

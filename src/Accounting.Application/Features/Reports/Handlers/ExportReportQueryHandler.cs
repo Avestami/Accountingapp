@@ -1,4 +1,5 @@
 using Accounting.Application.Common.Models;
+using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using MediatR;
 using System;
@@ -36,7 +37,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         if (!financialResult.IsSuccess)
                             return Result.Failure<byte[]>(financialResult.Error);
                         
-                        data = ExportFinancialReport(financialResult.Data, request.Format);
+                        data = ExportFinancialReport(financialResult.Value, request.Format);
                         break;
 
                     case "sales":
@@ -49,7 +50,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         if (!salesResult.IsSuccess)
                             return Result.Failure<byte[]>(salesResult.Error);
                         
-                        data = ExportSalesReport(salesResult.Data, request.Format);
+                        data = ExportSalesReport(salesResult.Value, request.Format);
                         break;
 
                     case "profit-loss":
@@ -62,7 +63,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         if (!plResult.IsSuccess)
                             return Result.Failure<byte[]>(plResult.Error);
                         
-                        data = ExportProfitLossReport(plResult.Data, request.Format);
+                        data = ExportProfitLossReport(plResult.Value, request.Format);
                         break;
 
                     case "balance-sheet":
@@ -74,7 +75,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         if (!bsResult.IsSuccess)
                             return Result.Failure<byte[]>(bsResult.Error);
                         
-                        data = ExportBalanceSheetReport(bsResult.Data, request.Format);
+                        data = ExportBalanceSheetReport(bsResult.Value, request.Format);
                         break;
 
                     default:

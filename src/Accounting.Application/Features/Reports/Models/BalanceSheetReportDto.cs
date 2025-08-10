@@ -1,43 +1,30 @@
 using System;
+using System.Collections.Generic;
 
 namespace Accounting.Application.Features.Reports.Models
 {
     public class BalanceSheetReportDto
     {
         public DateTime AsOfDate { get; set; }
-        public AssetsDto Assets { get; set; } = new();
-        public LiabilitiesDto Liabilities { get; set; } = new();
-        public EquityDto Equity { get; set; } = new();
-    }
-
-    public class AssetsDto
-    {
-        public CurrentAssetsDto CurrentAssets { get; set; } = new();
         public decimal TotalAssets { get; set; }
-    }
-
-    public class CurrentAssetsDto
-    {
-        public decimal Cash { get; set; }
-        public decimal AccountsReceivable { get; set; }
-        public decimal TotalCurrentAssets { get; set; }
-    }
-
-    public class LiabilitiesDto
-    {
-        public CurrentLiabilitiesDto CurrentLiabilities { get; set; } = new();
         public decimal TotalLiabilities { get; set; }
-    }
-
-    public class CurrentLiabilitiesDto
-    {
-        public decimal AccountsPayable { get; set; }
-        public decimal TotalCurrentLiabilities { get; set; }
-    }
-
-    public class EquityDto
-    {
-        public decimal RetainedEarnings { get; set; }
         public decimal TotalEquity { get; set; }
+        public List<BalanceSheetSectionDto> Assets { get; set; } = new();
+        public List<BalanceSheetSectionDto> Liabilities { get; set; } = new();
+        public List<BalanceSheetSectionDto> Equity { get; set; } = new();
+    }
+
+    public class BalanceSheetSectionDto
+    {
+        public string SectionName { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public List<BalanceSheetItemDto> Items { get; set; } = new();
+    }
+
+    public class BalanceSheetItemDto
+    {
+        public string AccountName { get; set; } = string.Empty;
+        public string AccountCode { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
     }
 }

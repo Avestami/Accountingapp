@@ -1,4 +1,5 @@
 using Accounting.Application.Common.Models;
+using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
@@ -27,40 +28,39 @@ namespace Accounting.Application.Features.Reports.Handlers
             {
                 // Get tickets data
                 var tickets = await _context.Tickets
-                    .Include(t => t.Airline)
                     .Where(t => t.CreatedAt >= request.StartDate && t.CreatedAt <= request.EndDate)
                     .ToListAsync(cancellationToken);
 
                 var totalTickets = tickets.Count;
                 var issuedTickets = tickets.Count(t => t.Status == TicketStatus.Completed);
-            var cancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled);
-            var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.TotalAmount);
+                var cancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled);
+                var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.Amount);
                 var averageTicketValue = issuedTickets > 0 ? totalRevenue / issuedTickets : 0;
 
-                // Group by airline
-                var ticketsByAirline = tickets
+                // Group by ticket type (since Airline property doesn't exist)
+                var ticketsByType = tickets
                     .Where(t => t.Status == TicketStatus.Completed)
-                    .GroupBy(t => t.Airline ?? "Unknown")
-                    .Select(g => new SalesReportItemDto
-                    {
-                        Name = g.Key,
-                        Count = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount),
-                        Percentage = totalRevenue > 0 ? (g.Sum(t => t.TotalAmount) / totalRevenue) * 100 : 0
-                    })
-                    .OrderByDescending(x => x.Revenue)
-                    .ToList();
-
-                // Group by destination (using route information if available)
-                var ticketsByDestination = tickets
-                    .Where(t => t.Status == TicketStatus.Completed)
-                    .GroupBy(t => t.Route ?? "Unknown")
+                    .GroupBy(t => t.Type.ToString())
                     .Select(g => new SalesReportItemDto
                     {
                         Name = g.Key,
                         TicketCount = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount),
-                        Percentage = totalRevenue > 0 ? (g.Sum(t => t.TotalAmount) / totalRevenue) * 100 : 0
+                        Revenue = g.Sum(t => t.Amount),
+                        Percentage = totalRevenue > 0 ? (double)((g.Sum(t => t.Amount) / totalRevenue) * 100) : 0
+                    })
+                    .OrderByDescending(x => x.Revenue)
+                    .ToList();
+
+                // Group by counterparty (using counterparty information)
+                var ticketsByCounterparty = tickets
+                    .Where(t => t.Status == TicketStatus.Completed)
+                    .GroupBy(t => t.Counterparty?.Name ?? "Unknown")
+                    .Select(g => new SalesReportItemDto
+                    {
+                        Name = g.Key,
+                        TicketCount = g.Count(),
+                        Revenue = g.Sum(t => t.Amount),
+                        Percentage = totalRevenue > 0 ? (double)((g.Sum(t => t.Amount) / totalRevenue) * 100) : 0
                     })
                     .OrderByDescending(x => x.Revenue)
                     .ToList();
@@ -81,7 +81,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         .Where(t => t.CreatedAt >= monthStart && t.CreatedAt <= monthEnd && t.Status == TicketStatus.Completed)
                         .ToList();
 
-                    var monthlyRevenue = monthlyTickets.Sum(t => t.TotalAmount);
+                    var monthlyRevenue = monthlyTickets.Sum(t => t.Amount);
                     var growthRate = previousMonthRevenue > 0 ? ((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : 0;
 
                     monthlySummary.Add(new MonthlySalesSummaryDto
@@ -106,8 +106,8 @@ namespace Accounting.Application.Features.Reports.Handlers
                     CancelledTickets = cancelledTickets,
                     TotalRevenue = totalRevenue,
                     AverageTicketValue = averageTicketValue,
-                    TicketsByAirline = ticketsByAirline,
-                    TicketsByDestination = ticketsByDestination,
+                    TicketsByAirline = ticketsByType,
+                    TicketsByDestination = ticketsByCounterparty,
                     MonthlySummary = monthlySummary
                 };
 

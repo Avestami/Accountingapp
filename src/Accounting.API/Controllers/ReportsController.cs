@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Accounting.Application.Features.Reports.Queries;
-using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Services;
 using Accounting.Application.Common.Models;
 using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Accounting.Application.Features.Reports.Models;
 
 namespace Accounting.API.Controllers
 {
@@ -76,7 +79,7 @@ namespace Accounting.API.Controllers
                 SearchTerm = searchTerm,
                 Airlines = airlines ?? new List<string>(),
                 Destinations = destinations ?? new List<string>(),
-                StatusFilters = statusFilters ?? new List<string>(),
+                Statuses = statusFilters ?? new List<string>(),
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
@@ -151,12 +154,12 @@ namespace Accounting.API.Controllers
         {
             var filter = new ReportFilterDto
             {
-                DateFrom = request.StartDate,
-                DateTo = request.EndDate,
+                DateFrom = request.StartDate ?? DateTime.Now.AddMonths(-1),
+                DateTo = request.EndDate ?? DateTime.Now,
                 SearchTerm = request.SearchTerm,
                 Airlines = request.Airlines ?? new List<string>(),
                 Destinations = request.Destinations ?? new List<string>(),
-                StatusFilters = request.StatusFilters ?? new List<string>()
+                Statuses = request.StatusFilters ?? new List<string>()
             };
 
             var reportResult = await _reportGenerationService.GenerateSalesReportAsync(filter);
@@ -174,7 +177,7 @@ namespace Accounting.API.Controllers
                 WorksheetName = "Sales Report"
             };
 
-            var exportResult = await _exportService.ExportSalesReportAsync(reportResult.Data, exportOptions);
+            var exportResult = await _exportService.ExportSalesReportAsync(reportResult.Value, exportOptions);
             if (!exportResult.IsSuccess)
                 return BadRequest(exportResult);
 
@@ -197,7 +200,7 @@ namespace Accounting.API.Controllers
             };
 
             var fileName = $"sales_report_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
-            return File(exportResult.Data, contentType, fileName);
+            return File(exportResult.Value, contentType, fileName);
         }
 
         /// <summary>
@@ -208,8 +211,8 @@ namespace Accounting.API.Controllers
         {
             var filter = new ReportFilterDto
             {
-                DateFrom = request.StartDate,
-                DateTo = request.EndDate,
+                DateFrom = request.StartDate ?? DateTime.Now.AddMonths(-1),
+                DateTo = request.EndDate ?? DateTime.Now,
                 SearchTerm = request.SearchTerm,
                 Categories = request.Categories ?? new List<string>()
             };
@@ -229,7 +232,7 @@ namespace Accounting.API.Controllers
                 WorksheetName = "Financial Report"
             };
 
-            var exportResult = await _exportService.ExportFinancialReportAsync(reportResult.Data, exportOptions);
+            var exportResult = await _exportService.ExportFinancialReportAsync(reportResult.Value, exportOptions);
             if (!exportResult.IsSuccess)
                 return BadRequest(exportResult);
 
@@ -252,7 +255,7 @@ namespace Accounting.API.Controllers
             };
 
             var fileName = $"financial_report_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
-            return File(exportResult.Data, contentType, fileName);
+            return File(exportResult.Value, contentType, fileName);
         }
 
         /// <summary>
@@ -263,8 +266,8 @@ namespace Accounting.API.Controllers
         {
             var filter = new ReportFilterDto
             {
-                DateFrom = request.StartDate,
-                DateTo = request.EndDate,
+                DateFrom = request.StartDate ?? DateTime.Now.AddMonths(-1),
+                DateTo = request.EndDate ?? DateTime.Now,
                 Categories = request.Categories ?? new List<string>()
             };
 
@@ -283,7 +286,7 @@ namespace Accounting.API.Controllers
                 WorksheetName = "Profit Loss Report"
             };
 
-            var exportResult = await _exportService.ExportProfitLossReportAsync(reportResult.Data, exportOptions);
+            var exportResult = await _exportService.ExportProfitLossReportAsync(reportResult.Value, exportOptions);
             if (!exportResult.IsSuccess)
                 return BadRequest(exportResult);
 
@@ -306,7 +309,7 @@ namespace Accounting.API.Controllers
             };
 
             var fileName = $"profit_loss_report_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
-            return File(exportResult.Data, contentType, fileName);
+            return File(exportResult.Value, contentType, fileName);
         }
 
         /// <summary>
@@ -335,7 +338,7 @@ namespace Accounting.API.Controllers
                 WorksheetName = "Balance Sheet"
             };
 
-            var exportResult = await _exportService.ExportBalanceSheetReportAsync(reportResult.Data, exportOptions);
+            var exportResult = await _exportService.ExportBalanceSheetReportAsync(reportResult.Value, exportOptions);
             if (!exportResult.IsSuccess)
                 return BadRequest(exportResult);
 
@@ -358,7 +361,7 @@ namespace Accounting.API.Controllers
             };
 
             var fileName = $"balance_sheet_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
-            return File(exportResult.Data, contentType, fileName);
+            return File(exportResult.Value, contentType, fileName);
         }
 
         /// <summary>

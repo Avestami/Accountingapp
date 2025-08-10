@@ -8,6 +8,9 @@ using Accounting.Application.Features.Tickets.Queries;
 using Accounting.Application.Common.Authorization;
 using Accounting.Domain.Enums;
 using System;
+using Accounting.Application.DTOs;
+using Accounting.Application.Common.Models;
+using static Accounting.Application.Features.Tickets.Queries.GetSalesStatisticsQuery;
 
 namespace Accounting.API.Controllers
 {
@@ -44,9 +47,9 @@ namespace Accounting.API.Controllers
                 PageSize = pageSize,
                 SearchTerm = searchTerm,
                 Status = status,
-                ServiceType = serviceType,
-                DateFrom = dateFrom,
-                DateTo = dateTo,
+                Type = serviceType != null ? Enum.Parse<TicketType>(serviceType) : null,
+                FromDate = dateFrom,
+                ToDate = dateTo,
                 SortBy = sortBy,
                 SortDirection = sortDirection
             };
@@ -61,7 +64,7 @@ namespace Accounting.API.Controllers
         [HttpGet("documents/{id}")]
         public async Task<ActionResult<Result<TicketDto>>> GetSalesDocument(int id)
         {
-            var query = new GetTicketByIdQuery { Id = id };
+            var query = new GetTicketByIdQuery(id);
             var result = await _mediator.Send(query);
             return result.IsSuccess ? Ok(result) : NotFound(result);
         }
@@ -75,7 +78,7 @@ namespace Accounting.API.Controllers
         {
             command.CreatedBy = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
             var result = await _mediator.Send(command);
-            return result.IsSuccess ? CreatedAtAction(nameof(GetSalesDocument), new { id = result.Data.Id }, result) : BadRequest(result);
+            return result.IsSuccess ? CreatedAtAction(nameof(GetSalesDocument), new { id = result.Value.Id }, result) : BadRequest(result);
         }
 
         /// <summary>
@@ -100,9 +103,8 @@ namespace Accounting.API.Controllers
         [RequirePermission(Permission.DeleteTicket)]
         public async Task<ActionResult<Result<bool>>> DeleteSalesDocument(int id)
         {
-            var command = new DeleteTicketCommand 
-            { 
-                Id = id,
+            var command = new DeleteTicketCommand(id)
+            {
                 DeletedBy = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system"
             };
             var result = await _mediator.Send(command);
@@ -116,9 +118,8 @@ namespace Accounting.API.Controllers
         [RequirePermission(Permission.IssueTicket)]
         public async Task<ActionResult<Result<TicketDto>>> IssueTicket(int id)
         {
-            var command = new IssueTicketCommand 
-            { 
-                Id = id,
+            var command = new IssueTicketCommand(id)
+            {
                 IssuedBy = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system"
             };
             var result = await _mediator.Send(command);

@@ -34,7 +34,7 @@ namespace Accounting.Application.Features.Users.Handlers
                 user.IsActive = false;
                 user.UpdatedAt = DateTime.UtcNow;
 
-                _unitOfWork.Users.Update(user);
+                await _unitOfWork.Users.UpdateAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result.Success(true);

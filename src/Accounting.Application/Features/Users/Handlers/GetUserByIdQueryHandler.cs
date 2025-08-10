@@ -39,11 +39,9 @@ namespace Accounting.Application.Features.Users.Handlers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Role = user.Role,
-                    Department = user.Department,
-                    Position = user.Position,
                     IsActive = user.IsActive,
                     CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
+                    UpdatedAt = user.UpdatedAt ?? DateTime.UtcNow
                 };
 
                 return Result.Success(userDto);

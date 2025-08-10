@@ -1,4 +1,5 @@
 using Accounting.Application.Common.Models;
+using Accounting.Application.Features.Reports.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
@@ -42,9 +43,9 @@ namespace Accounting.Application.Features.Reports.Handlers
                 var totalIncome = incomes.Sum(i => i.Amount);
                 var totalCosts = costs.Sum(c => c.Amount);
 
-                // Group income by category
+                // Group income by description (since Category doesn't exist)
                 var incomeItems = incomes
-                    .GroupBy(i => i.Category ?? "Other")
+                    .GroupBy(i => i.Description ?? "Other")
                     .Select(g => new FinancialReportItemDto
                     {
                         Category = g.Key,
@@ -54,9 +55,9 @@ namespace Accounting.Application.Features.Reports.Handlers
                     })
                     .ToList();
 
-                // Group costs by category
+                // Group costs by description (since Category doesn't exist)
                 var costItems = costs
-                    .GroupBy(c => c.Category ?? "Other")
+                    .GroupBy(c => c.Description ?? "Other")
                     .Select(g => new FinancialReportItemDto
                     {
                         Category = g.Key,

@@ -7,6 +7,12 @@ namespace Accounting.Application.Features.Reports.Models
     public class ReportFilterDto
     {
         [Required]
+        public DateTime DateFrom { get; set; }
+        
+        [Required]
+        public DateTime DateTo { get; set; }
+        
+        [Required]
         public DateTime StartDate { get; set; }
         
         [Required]

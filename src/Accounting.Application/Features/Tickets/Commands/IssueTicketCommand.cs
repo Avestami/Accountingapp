@@ -6,8 +6,9 @@ namespace Accounting.Application.Features.Tickets.Commands
 {
     public class IssueTicketCommand : ICommand<Result<TicketDto>>
     {
-        public int Id { get; }
+        public int Id { get; set; }
         public string? Notes { get; }
+        public string? IssuedBy { get; set; }
 
         public IssueTicketCommand(int id, string? notes = null)
         {
