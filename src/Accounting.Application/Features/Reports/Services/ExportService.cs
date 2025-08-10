@@ -52,11 +52,11 @@ namespace Accounting.Application.Features.Reports.Services
                 }
 
                 document.Close();
-                return Result<byte[]>.Success(stream.ToArray());
+                return Result.Success(stream.ToArray());
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"PDF export failed: {ex.Message}");
+                return Result.Failure($"PDF export failed: {ex.Message}");
             }
         }
 
@@ -73,11 +73,11 @@ namespace Accounting.Application.Features.Reports.Services
                 await AddExcelContentAsync(worksheet, data, options, cancellationToken);
                 ApplyExcelFormatting(worksheet, options);
 
-                return Result<byte[]>.Success(package.GetAsByteArray());
+                return Result.Success(package.GetAsByteArray());
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"Excel export failed: {ex.Message}");
+                return Result.Failure($"Excel export failed: {ex.Message}");
             }
         }
 
@@ -97,11 +97,11 @@ namespace Accounting.Application.Features.Reports.Services
 
                 await AddCsvContentAsync(csv, data, options, cancellationToken);
 
-                return Result<byte[]>.Success(Encoding.UTF8.GetBytes(csv.ToString()));
+                return Result.Success(Encoding.UTF8.GetBytes(csv.ToString()));
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"CSV export failed: {ex.Message}");
+                return Result.Failure($"CSV export failed: {ex.Message}");
             }
         }
 
@@ -125,11 +125,11 @@ namespace Accounting.Application.Features.Reports.Services
                 };
 
                 var json = JsonSerializer.Serialize(wrapper, jsonOptions);
-                return Result<byte[]>.Success(Encoding.UTF8.GetBytes(json));
+                return Result.Success(Encoding.UTF8.GetBytes(json));
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"JSON export failed: {ex.Message}");
+                return Result.Failure($"JSON export failed: {ex.Message}");
             }
         }
 
@@ -141,7 +141,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result<byte[]>.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure($"Unsupported format: {options.Format}")
             };
         }
 
@@ -153,7 +153,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result<byte[]>.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure($"Unsupported format: {options.Format}")
             };
         }
 
@@ -165,7 +165,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result<byte[]>.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure($"Unsupported format: {options.Format}")
             };
         }
 
@@ -177,7 +177,7 @@ namespace Accounting.Application.Features.Reports.Services
                 "excel" => await ExportToExcelAsync(report, options, cancellationToken),
                 "csv" => await ExportToCsvAsync(report, options, cancellationToken),
                 "json" => await ExportToJsonAsync(report, options, cancellationToken),
-                _ => Result<byte[]>.Failure($"Unsupported format: {options.Format}")
+                _ => Result.Failure($"Unsupported format: {options.Format}")
             };
         }
 
@@ -198,7 +198,7 @@ namespace Accounting.Application.Features.Reports.Services
                         ApplyExcelFormatting(worksheet, options);
                     }
 
-                    return Result<byte[]>.Success(package.GetAsByteArray());
+                    return Result.Success(package.GetAsByteArray());
                 }
                 else
                 {
@@ -207,7 +207,7 @@ namespace Accounting.Application.Features.Reports.Services
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"Multiple reports export failed: {ex.Message}");
+                return Result.Failure($"Multiple reports export failed: {ex.Message}");
             }
         }
 
@@ -216,13 +216,13 @@ namespace Accounting.Application.Features.Reports.Services
             try
             {
                 if (!File.Exists(templatePath))
-                    return Result<byte[]>.Failure("Template file not found");
+                    return Result.Failure("Template file not found");
 
                 return await ExportToExcelAsync(data, options, cancellationToken);
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"Template export failed: {ex.Message}");
+                return Result.Failure($"Template export failed: {ex.Message}");
             }
         }
 

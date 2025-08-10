@@ -32,34 +32,37 @@ namespace Accounting.Application.Features.Tickets.Handlers
                 var issuedTickets = tickets.Count(t => t.Status == TicketStatus.Completed);
             var cancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled);
             var pendingTickets = tickets.Count(t => t.Status == TicketStatus.Pending);
-            var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.TotalAmount);
+            var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.Amount);
                 var averageTicketValue = issuedTickets > 0 ? totalRevenue / issuedTickets : 0;
                 var cancellationRate = totalTickets > 0 ? (decimal)cancelledTickets / totalTickets * 100 : 0;
 
                 // Top airlines
                 var topAirlines = tickets
-                    .Where(t => t.Status == TicketStatus.Completed && !string.IsNullOrEmpty(t.Airline))
-                    .GroupBy(t => t.Airline)
-                    .Select(g => new TopPerformerDto
-                    {
-                        Name = g.Key,
-                        Count = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount)
-                    })
-                    .OrderByDescending(x => x.Revenue)
-                    .Take(5)
-                    .ToList();
-
-                // Top destinations by revenue
-                var topDestinations = tickets
-                    .Where(t => t.Status == TicketStatus.Completed && !string.IsNullOrEmpty(t.Route))
-                    .GroupBy(t => t.Route)
+                    .Where(t => t.Status == TicketStatus.Completed && t.Items.Any())
+                    .SelectMany(t => t.Items)
+                    .GroupBy(i => i.Airline?.Name ?? "Unknown")
                     .Select(g => new SalesStatisticsItemDto
                     {
                         Name = g.Key,
                         Count = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount),
-                        Percentage = totalRevenue > 0 ? (g.Sum(t => t.TotalAmount) / totalRevenue) * 100 : 0
+                        Revenue = g.Sum(i => i.Amount),
+                        Percentage = totalRevenue > 0 ? (g.Sum(i => i.Amount) / totalRevenue) * 100 : 0
+                    })
+                    .OrderByDescending(x => x.Revenue)
+                    .Take(5)
+                    .ToArray();
+
+                // Top destinations by revenue
+                var topDestinations = tickets
+                    .Where(t => t.Status == TicketStatus.Completed && t.Items.Any())
+                    .SelectMany(t => t.Items)
+                    .GroupBy(i => i.Destination?.Name ?? "Unknown")
+                    .Select(g => new SalesStatisticsItemDto
+                    {
+                        Name = g.Key,
+                        Count = g.Count(),
+                        Revenue = g.Sum(i => i.Amount),
+                        Percentage = totalRevenue > 0 ? (g.Sum(i => i.Amount) / totalRevenue) * 100 : 0
                     })
                     .OrderByDescending(x => x.Revenue)
                     .Take(5)
@@ -74,7 +77,7 @@ namespace Accounting.Application.Features.Tickets.Handlers
                         Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
                         Year = g.Key.Year,
                         TicketCount = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount),
+                        Revenue = g.Sum(t => t.Amount),
                         GrowthRate = 0 // Calculate growth rate if needed
                     })
                     .OrderBy(x => x.Year)

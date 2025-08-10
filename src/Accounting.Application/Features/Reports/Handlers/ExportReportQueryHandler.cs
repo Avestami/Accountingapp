@@ -34,7 +34,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         };
                         var financialResult = await _mediator.Send(financialQuery, cancellationToken);
                         if (!financialResult.IsSuccess)
-                            return Result<byte[]>.Failure(financialResult.Error);
+                            return Result.Failure(financialResult.Error);
                         
                         data = ExportFinancialReport(financialResult.Data, request.Format);
                         break;
@@ -47,7 +47,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         };
                         var salesResult = await _mediator.Send(salesQuery, cancellationToken);
                         if (!salesResult.IsSuccess)
-                            return Result<byte[]>.Failure(salesResult.Error);
+                            return Result.Failure(salesResult.Error);
                         
                         data = ExportSalesReport(salesResult.Data, request.Format);
                         break;
@@ -60,7 +60,7 @@ namespace Accounting.Application.Features.Reports.Handlers
                         };
                         var plResult = await _mediator.Send(plQuery, cancellationToken);
                         if (!plResult.IsSuccess)
-                            return Result<byte[]>.Failure(plResult.Error);
+                            return Result.Failure(plResult.Error);
                         
                         data = ExportProfitLossReport(plResult.Data, request.Format);
                         break;
@@ -72,20 +72,20 @@ namespace Accounting.Application.Features.Reports.Handlers
                         };
                         var bsResult = await _mediator.Send(bsQuery, cancellationToken);
                         if (!bsResult.IsSuccess)
-                            return Result<byte[]>.Failure(bsResult.Error);
+                            return Result.Failure(bsResult.Error);
                         
                         data = ExportBalanceSheetReport(bsResult.Data, request.Format);
                         break;
 
                     default:
-                        return Result<byte[]>.Failure($"Unknown report type: {request.ReportType}");
+                        return Result.Failure($"Unknown report type: {request.ReportType}");
                 }
 
-                return Result<byte[]>.Success(data);
+                return Result.Success(data);
             }
             catch (Exception ex)
             {
-                return Result<byte[]>.Failure($"Error exporting report: {ex.Message}");
+                return Result.Failure($"Error exporting report: {ex.Message}");
             }
         }
 
