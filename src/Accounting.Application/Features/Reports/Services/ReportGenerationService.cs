@@ -301,22 +301,18 @@ namespace Accounting.Application.Features.Reports.Services
                     .Take(filter.PageSize)
                     .ToListAsync(cancellationToken);
 
-                var result = new PagedResult<T>
-                {
-                    Items = items,
-                    PageNumber = filter.PageNumber,
-                    PageSize = filter.PageSize,
-                    TotalCount = totalCount,
-                    TotalPages = totalPages,
-                    HasPreviousPage = filter.PageNumber > 1,
-                    HasNextPage = filter.PageNumber < totalPages
-                };
+                var result = new PagedResult<T>(
+                    items,
+                    totalCount,
+                    filter.PageNumber,
+                    filter.PageSize
+                );
 
-                return Result<PagedResult<T>>.Success(result);
+                return Result.Success(result);
             }
             catch (Exception ex)
             {
-                return Result<PagedResult<T>>.Failure($"Failed to get paged report data: {ex.Message}");
+                return Result.Failure<PagedResult<T>>($"Failed to get paged report data: {ex.Message}");
             }
         }
 
@@ -375,7 +371,7 @@ namespace Accounting.Application.Features.Reports.Services
         {
             if (statusFilters?.Any() == true)
             {
-                query = query.Where(t => statusFilters.Contains(t.Status));
+                query = query.Where(t => statusFilters.Contains(t.Status.ToString()));
             }
             return query;
         }
@@ -406,10 +402,10 @@ namespace Accounting.Application.Features.Reports.Services
                 .GroupBy(item => item.Airline.Name)
                 .Select(g => new AirlineReportDto
                 {
-                    AirlineName = g.Key,
+                    Name = g.Key,
                     TicketCount = g.Count(),
                     Revenue = g.Sum(item => item.Amount),
-                    Percentage = totalRevenue > 0 ? (g.Sum(item => item.Amount) / totalRevenue) * 100 : 0
+                    Percentage = totalRevenue > 0 ? (double)(g.Sum(item => item.Amount) / totalRevenue) * 100 : 0
                 })
                 .OrderByDescending(a => a.Revenue)
                 .ToList();
@@ -425,10 +421,10 @@ namespace Accounting.Application.Features.Reports.Services
                 .GroupBy(item => item.Destination.Name)
                 .Select(g => new DestinationReportDto
                 {
-                    DestinationName = g.Key,
+                    Name = g.Key,
                     TicketCount = g.Count(),
                     Revenue = g.Sum(item => item.Amount),
-                    Percentage = totalRevenue > 0 ? (g.Sum(item => item.Amount) / totalRevenue) * 100 : 0
+                    Percentage = totalRevenue > 0 ? (double)(g.Sum(item => item.Amount) / totalRevenue) * 100 : 0
                 })
                 .OrderByDescending(d => d.Revenue)
                 .ToList();

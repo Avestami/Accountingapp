@@ -29,32 +29,30 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     .ToListAsync(cancellationToken);
 
                 var totalTickets = tickets.Count;
-                var issuedTickets = tickets.Count(t => t.Status == TicketStatus.Issued);
-                var cancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled);
-                var pendingTickets = tickets.Count(t => t.Status == TicketStatus.Pending);
-
-                var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Issued).Sum(t => t.TotalAmount);
+                var issuedTickets = tickets.Count(t => t.Status == TicketStatus.Completed);
+            var cancelledTickets = tickets.Count(t => t.Status == TicketStatus.Cancelled);
+            var pendingTickets = tickets.Count(t => t.Status == TicketStatus.Pending);
+            var totalRevenue = tickets.Where(t => t.Status == TicketStatus.Completed).Sum(t => t.TotalAmount);
                 var averageTicketValue = issuedTickets > 0 ? totalRevenue / issuedTickets : 0;
                 var cancellationRate = totalTickets > 0 ? (decimal)cancelledTickets / totalTickets * 100 : 0;
 
                 // Top airlines
                 var topAirlines = tickets
-                    .Where(t => t.Status == TicketStatus.Issued && !string.IsNullOrEmpty(t.Airline))
+                    .Where(t => t.Status == TicketStatus.Completed && !string.IsNullOrEmpty(t.Airline))
                     .GroupBy(t => t.Airline)
-                    .Select(g => new SalesStatisticsItemDto
+                    .Select(g => new TopPerformerDto
                     {
                         Name = g.Key,
                         Count = g.Count(),
-                        Revenue = g.Sum(t => t.TotalAmount),
-                        Percentage = totalRevenue > 0 ? (g.Sum(t => t.TotalAmount) / totalRevenue) * 100 : 0
+                        Revenue = g.Sum(t => t.TotalAmount)
                     })
                     .OrderByDescending(x => x.Revenue)
                     .Take(5)
-                    .ToArray();
+                    .ToList();
 
-                // Top destinations
+                // Top destinations by revenue
                 var topDestinations = tickets
-                    .Where(t => t.Status == TicketStatus.Issued && !string.IsNullOrEmpty(t.Route))
+                    .Where(t => t.Status == TicketStatus.Completed && !string.IsNullOrEmpty(t.Route))
                     .GroupBy(t => t.Route)
                     .Select(g => new SalesStatisticsItemDto
                     {
@@ -68,8 +66,8 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     .ToArray();
 
                 // Monthly sales
-                var monthlySales = tickets
-                    .Where(t => t.Status == TicketStatus.Issued)
+                var monthlyTrend = tickets
+                    .Where(t => t.Status == TicketStatus.Completed)
                     .GroupBy(t => new { t.CreatedAt.Year, t.CreatedAt.Month })
                     .Select(g => new MonthlySalesDto
                     {
@@ -84,10 +82,10 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     .ToArray();
 
                 // Calculate growth rates
-                for (int i = 1; i < monthlySales.Length; i++)
+                for (int i = 1; i < monthlyTrend.Length; i++)
                 {
-                    var current = monthlySales[i];
-                    var previous = monthlySales[i - 1];
+                    var current = monthlyTrend[i];
+                    var previous = monthlyTrend[i - 1];
                     
                     if (previous.Revenue > 0)
                     {
@@ -106,14 +104,14 @@ namespace Accounting.Application.Features.Tickets.Handlers
                     CancellationRate = cancellationRate,
                     TopAirlines = topAirlines,
                     TopDestinations = topDestinations,
-                    MonthlySales = monthlySales
+                    MonthlySales = monthlyTrend
                 };
 
-                return Result<SalesStatisticsDto>.Success(statistics);
+                return Result.Success(statistics);
             }
             catch (Exception ex)
             {
-                return Result<SalesStatisticsDto>.Failure($"Error generating sales statistics: {ex.Message}");
+                return Result.Failure<SalesStatisticsDto>($"Error generating sales statistics: {ex.Message}");
             }
         }
     }
