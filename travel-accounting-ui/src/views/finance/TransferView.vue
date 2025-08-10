@@ -4,7 +4,7 @@
       <div class="bg-white rounded-lg shadow-sm p-6">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-900">انتقال وجه</h1>
-          <AppButton @click="createNewTransfer">
+          <AppButton @click="openCreateModal">
             انتقال جدید
           </AppButton>
         </div>
@@ -142,7 +142,7 @@
                     </button>
                     <button 
                       v-if="transfer.status === 'pending'"
-                      @click="editTransfer(transfer.id)" 
+                      @click="openEditModal(transfer)" 
                       class="text-indigo-600 hover:text-indigo-900"
                     >
                       <span class="sr-only">ویرایش</span>
@@ -217,6 +217,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Transfer Modal -->
+    <TransferModal
+      :isOpen="showModal"
+      :transfer="selectedTransfer"
+      @close="closeModal"
+      @save="handleSaveTransfer"
+    />
   </div>
 </template>
 
@@ -224,14 +232,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFinanceStore } from '../../stores/finance'
+import { financeApi } from '../../services/api'
 import AppButton from '@/components/AppButton.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
+import TransferModal from '@/components/finance/TransferModal.vue'
 
 export default {
   name: 'TransferView',
   components: {
     AppButton,
-    AppSpinner
+    AppSpinner,
+    TransferModal
   },
   setup() {
     const router = useRouter()
@@ -240,6 +251,8 @@ export default {
     // Reactive data
     const loading = ref(false)
     const error = ref(null)
+    const showModal = ref(false)
+    const selectedTransfer = ref(null)
     const filters = ref({
       search: '',
       status: '',
@@ -315,7 +328,46 @@ export default {
     }
     
     const createNewTransfer = () => {
-      router.push('/finance/transfers/create')
+      selectedTransfer.value = null
+      showModal.value = true
+    }
+    
+    const openCreateModal = () => {
+      selectedTransfer.value = null
+      showModal.value = true
+    }
+    
+    const openEditModal = (transfer) => {
+      selectedTransfer.value = { ...transfer }
+      showModal.value = true
+    }
+    
+    const closeModal = () => {
+      showModal.value = false
+      selectedTransfer.value = null
+    }
+    
+    const handleSaveTransfer = async (transferData) => {
+      try {
+        if (selectedTransfer.value) {
+          // Update existing transfer
+          const index = financeStore.transfers.findIndex(transfer => transfer.id === selectedTransfer.value.id)
+          if (index !== -1) {
+            financeStore.transfers[index] = { ...transferData, id: selectedTransfer.value.id }
+          }
+        } else {
+          // Create new transfer
+          const newTransfer = {
+            ...transferData,
+            id: Date.now() // Temporary ID
+          }
+          financeStore.transfers.unshift(newTransfer)
+          financeStore.totalTransfers++
+        }
+        closeModal()
+      } catch (err) {
+        console.error('Error saving transfer:', err)
+      }
     }
     
     const viewTransfer = (id) => {
@@ -323,17 +375,22 @@ export default {
     }
     
     const editTransfer = (id) => {
-      router.push(`/finance/transfers/${id}/edit`)
+      const transfer = financeStore.transfers.find(transfer => transfer.id === id)
+      if (transfer) {
+        openEditModal(transfer)
+      }
     }
     
     const confirmTransfer = async (id) => {
       if (confirm('آیا از تأیید این انتقال اطمینان دارید؟')) {
         loading.value = true
         try {
-          // TODO: Implement confirm API call
-          // await financeApi.confirmTransfer(id)
+          await financeApi.updateTransferStatus(id, { 
+            status: 'Completed',
+            notes: 'Transfer confirmed by user'
+          })
           
-          // For now, update local state
+          // Update local state
           const transfer = financeStore.transfers.find(t => t.id === id)
           if (transfer) {
             transfer.status = 'completed'
@@ -351,10 +408,12 @@ export default {
       if (confirm('آیا از لغو این انتقال اطمینان دارید؟')) {
         loading.value = true
         try {
-          // TODO: Implement cancel API call
-          // await financeApi.cancelTransfer(id)
+          await financeApi.updateTransferStatus(id, { 
+            status: 'Cancelled',
+            notes: 'Transfer cancelled by user'
+          })
           
-          // For now, update local state
+          // Update local state
           const transfer = financeStore.transfers.find(t => t.id === id)
           if (transfer) {
             transfer.status = 'cancelled'
@@ -421,11 +480,17 @@ export default {
     return {
       loading,
       error,
+      showModal,
+      selectedTransfer,
       filters,
       pagination,
       transfers,
       totalTransfers,
       loadTransfers,
+      openCreateModal,
+      openEditModal,
+      closeModal,
+      handleSaveTransfer,
       createNewTransfer,
       viewTransfer,
       editTransfer,

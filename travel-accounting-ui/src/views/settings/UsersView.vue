@@ -36,11 +36,11 @@
             @change="applyFilters"
           >
             <option value="">همه نقش‌ها</option>
-            <option value="admin">مدیر سیستم</option>
-            <option value="manager">مدیر</option>
-            <option value="accountant">حسابدار</option>
-            <option value="sales">کارشناس فروش</option>
-            <option value="user">کاربر عادی</option>
+            <option value="Admin">مدیر سیستم</option>
+            <option value="Manager">مدیر</option>
+            <option value="Accountant">حسابدار</option>
+            <option value="Sales">کارشناس فروش</option>
+            <option value="User">کاربر عادی</option>
           </select>
         </div>
 
@@ -55,7 +55,6 @@
             <option value="">همه وضعیت‌ها</option>
             <option value="active">فعال</option>
             <option value="inactive">غیرفعال</option>
-            <option value="locked">قفل شده</option>
           </select>
         </div>
       </div>
@@ -64,7 +63,7 @@
         <div class="text-sm text-gray-600">
           {{ filteredUsers.length }} کاربر یافت شد
         </div>
-        <AppButton @click="createUser" variant="primary">
+        <AppButton @click="openCreateModal" variant="primary">
           <svg class="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
@@ -115,10 +114,10 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
                 <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                  {{ getInitials(user.name) }}
+                  {{ getInitials(user.fullName || user.firstName + ' ' + user.lastName) }}
                 </div>
                 <div class="mr-4">
-                  <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ user.fullName || user.firstName + ' ' + user.lastName }}</div>
                   <div class="text-sm text-gray-500">{{ user.email }}</div>
                 </div>
               </div>
@@ -132,22 +131,22 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ formatDate(user.lastLogin) }}
+              {{ formatDate(user.lastLoginAt) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusBadgeClass(user.status)">
-                {{ getStatusLabel(user.status) }}
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusBadgeClass(user.isActive)">
+                {{ getStatusLabel(user.isActive) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <div class="flex space-x-3 space-x-reverse">
-                <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900">
+                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
                 <button @click="toggleUserStatus(user)" class="text-yellow-600 hover:text-yellow-900">
-                  <svg v-if="user.status === 'active'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg v-if="user.isActive" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,6 +216,14 @@
         </div>
       </div>
     </div>
+
+    <!-- User Modal -->
+    <UserModal
+      :is-open="showModal"
+      :user="selectedUser"
+      @close="closeModal"
+      @save="handleSaveUser"
+    />
   </div>
 </template>
 
@@ -225,6 +232,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import AppButton from '@/components/AppButton.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
+import UserModal from '@/components/UserModal.vue'
 
 const settingsStore = useSettingsStore()
 
@@ -235,15 +243,30 @@ const statusFilter = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const loading = ref(true)
+const showModal = ref(false)
+const selectedUser = ref(null)
 
 // Load users on component mount
 onMounted(async () => {
   try {
-    await settingsStore.loadAllSettings()
+    await loadUsers()
   } finally {
     loading.value = false
   }
 })
+
+// Load users function
+async function loadUsers() {
+  try {
+    await settingsStore.loadUsers({
+      searchTerm: searchTerm.value,
+      role: roleFilter.value,
+      isActive: statusFilter.value === 'active' ? true : statusFilter.value === 'inactive' ? false : undefined
+    })
+  } catch (error) {
+    console.error('Error loading users:', error)
+  }
+}
 
 // Computed properties
 const filteredUsers = computed(() => {
@@ -252,8 +275,10 @@ const filteredUsers = computed(() => {
   if (searchTerm.value) {
     const term = searchTerm.value.toLowerCase()
     result = result.filter(user => 
-      user.name.toLowerCase().includes(term) || 
-      user.username.toLowerCase().includes(term) || 
+      (user.fullName && user.fullName.toLowerCase().includes(term)) ||
+      (user.firstName && user.firstName.toLowerCase().includes(term)) ||
+      (user.lastName && user.lastName.toLowerCase().includes(term)) ||
+      (user.username && user.username.toLowerCase().includes(term)) ||
       (user.email && user.email.toLowerCase().includes(term))
     )
   }
@@ -263,7 +288,8 @@ const filteredUsers = computed(() => {
   }
 
   if (statusFilter.value) {
-    result = result.filter(user => user.status === statusFilter.value)
+    const isActive = statusFilter.value === 'active'
+    result = result.filter(user => user.isActive === isActive)
   }
 
   return result
@@ -290,6 +316,7 @@ const paginationEnd = computed(() => {
 // Methods
 function applyFilters() {
   currentPage.value = 1
+  loadUsers()
 }
 
 function getInitials(name) {
@@ -303,42 +330,40 @@ function getInitials(name) {
 
 function getRoleLabel(role) {
   const labels = {
-    admin: 'مدیر سیستم',
-    manager: 'مدیر',
-    accountant: 'حسابدار',
-    sales: 'کارشناس فروش',
-    user: 'کاربر عادی'
+    Admin: 'مدیر سیستم',
+    Manager: 'مدیر',
+    Accountant: 'حسابدار',
+    Sales: 'کارشناس فروش',
+    User: 'کاربر عادی'
   }
   return labels[role] || role
 }
 
 function getStatusLabel(status) {
   const labels = {
-    active: 'فعال',
-    inactive: 'غیرفعال',
-    locked: 'قفل شده'
+    true: 'فعال',
+    false: 'غیرفعال'
   }
-  return labels[status] || status
+  return labels[status] || (status ? 'فعال' : 'غیرفعال')
 }
 
 function getRoleBadgeClass(role) {
   const classes = {
-    admin: 'bg-purple-100 text-purple-800',
-    manager: 'bg-blue-100 text-blue-800',
-    accountant: 'bg-green-100 text-green-800',
-    sales: 'bg-yellow-100 text-yellow-800',
-    user: 'bg-gray-100 text-gray-800'
+    Admin: 'bg-purple-100 text-purple-800',
+    Manager: 'bg-blue-100 text-blue-800',
+    Accountant: 'bg-green-100 text-green-800',
+    Sales: 'bg-yellow-100 text-yellow-800',
+    User: 'bg-gray-100 text-gray-800'
   }
   return classes[role] || 'bg-gray-100 text-gray-800'
 }
 
 function getStatusBadgeClass(status) {
   const classes = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800',
-    locked: 'bg-red-100 text-red-800'
+    true: 'bg-green-100 text-green-800',
+    false: 'bg-gray-100 text-gray-800'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return classes[status] || (status ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')
 }
 
 function formatDate(dateString) {
@@ -347,59 +372,69 @@ function formatDate(dateString) {
   return dateString
 }
 
-// CRUD operations
-async function createUser() {
-  // This would open a modal or navigate to a create user form
-  const userData = {
-    name: 'کاربر جدید',
-    username: 'newuser',
-    email: 'newuser@example.com',
-    role: 'user',
-    status: 'active'
-  }
-  
+// Modal functions
+function openCreateModal() {
+  selectedUser.value = null
+  showModal.value = true
+}
+
+function openEditModal(user) {
+  selectedUser.value = user
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+  selectedUser.value = null
+}
+
+async function handleSaveUser(userData) {
   try {
-    await settingsStore.createUser(userData)
-    alert('کاربر جدید با موفقیت ایجاد شد')
+    if (selectedUser.value) {
+      // Edit mode
+      await settingsStore.updateUser(selectedUser.value.id, userData)
+    } else {
+      // Create mode
+      await settingsStore.createUser(userData)
+    }
+    
+    closeModal()
+    await loadUsers()
   } catch (error) {
-    alert('خطا در ایجاد کاربر: ' + error.message)
+    console.error('Error saving user:', error)
+    // Handle error (show toast, etc.)
   }
+}
+
+// CRUD operations (legacy - can be removed)
+async function createUser() {
+  // This function is now replaced by openCreateModal
+  openCreateModal()
 }
 
 async function editUser(user) {
-  // This would open a modal or navigate to an edit user form
-  const updates = {
-    name: user.name + ' (ویرایش شده)',
-    email: user.email,
-    role: user.role,
-    status: user.status
-  }
-  
-  try {
-    await settingsStore.updateUser(user.id, updates)
-    alert(`کاربر ${user.name} با موفقیت ویرایش شد`)
-  } catch (error) {
-    alert('خطا در ویرایش کاربر: ' + error.message)
-  }
+  // This function is now replaced by openEditModal
+  openEditModal(user)
 }
 
 async function toggleUserStatus(user) {
-  const newStatus = user.status === 'active' ? 'inactive' : 'active'
-  
   try {
-    await settingsStore.updateUser(user.id, { status: newStatus })
-    alert(`وضعیت کاربر ${user.name} با موفقیت تغییر کرد`)
+    await settingsStore.toggleUserStatus(user.id)
+    const statusText = user.isActive ? 'غیرفعال' : 'فعال'
+    alert(`وضعیت کاربر ${user.fullName || user.firstName + ' ' + user.lastName} به ${statusText} تغییر کرد`)
+    await loadUsers()
   } catch (error) {
     alert('خطا در تغییر وضعیت کاربر: ' + error.message)
   }
 }
 
 async function deleteUser(user) {
-  const confirmed = confirm(`آیا از حذف کاربر ${user.name} اطمینان دارید؟`)
+  const confirmed = confirm(`آیا از حذف کاربر ${user.fullName || user.firstName + ' ' + user.lastName} اطمینان دارید؟`)
   if (confirmed) {
     try {
       await settingsStore.deleteUser(user.id)
-      alert(`کاربر ${user.name} با موفقیت حذف شد`)
+      alert(`کاربر ${user.fullName || user.firstName + ' ' + user.lastName} با موفقیت حذف شد`)
+      await loadUsers()
     } catch (error) {
       alert('خطا در حذف کاربر: ' + error.message)
     }

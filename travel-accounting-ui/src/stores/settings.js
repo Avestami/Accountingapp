@@ -581,29 +581,72 @@ export const useSettingsStore = defineStore('settings', {
     },
 
     // User management
+    async loadUsers(params = {}) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.getUsers(params)
+        
+        if (response.success) {
+          this.users = response.data.items || response.data
+          return response.data
+        } else {
+          throw new Error(response.message || 'خطا در بارگذاری کاربران')
+        }
+        
+      } catch (error) {
+        this.error = 'خطا در بارگذاری کاربران'
+        console.error('Load users error:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async getUserById(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.getUser(id)
+        
+        if (response.success) {
+          return response.data
+        } else {
+          throw new Error(response.message || 'کاربر یافت نشد')
+        }
+        
+      } catch (error) {
+        this.error = 'خطا در بارگذاری کاربر'
+        console.error('Get user error:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
     async createUser(userData) {
       this.loading = true
       this.error = null
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.createUser(userData)
         
-        const newUser = {
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isActive: true,
-          lastLogin: null,
-          ...userData
+        if (response.success) {
+          const newUser = response.data
+          this.users.unshift(newUser)
+          this.currentUser = newUser
+          return newUser
+        } else {
+          throw new Error(response.message || 'خطا در ایجاد کاربر')
         }
         
-        this.users.unshift(newUser)
-        this.currentUser = newUser
-        
-        return newUser
-        
       } catch (error) {
-        this.error = 'خطا در ایجاد کاربر جدید'
+        this.error = error.message || 'خطا در ایجاد کاربر جدید'
         console.error('Create user error:', error)
         throw error
       } finally {
@@ -616,29 +659,28 @@ export const useSettingsStore = defineStore('settings', {
       this.error = null
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.updateUser(id, updates)
         
-        const index = this.users.findIndex(user => user.id === id)
-        if (index === -1) {
-          throw new Error('کاربر یافت نشد')
+        if (response.success) {
+          const updatedUser = response.data
+          const index = this.users.findIndex(user => user.id === id)
+          
+          if (index !== -1) {
+            this.users[index] = updatedUser
+          }
+          
+          if (this.currentUser?.id === id) {
+            this.currentUser = updatedUser
+          }
+          
+          return updatedUser
+        } else {
+          throw new Error(response.message || 'خطا در به‌روزرسانی کاربر')
         }
-        
-        const updatedUser = {
-          ...this.users[index],
-          ...updates,
-          updatedAt: new Date().toISOString()
-        }
-        
-        this.users[index] = updatedUser
-        
-        if (this.currentUser?.id === id) {
-          this.currentUser = updatedUser
-        }
-        
-        return updatedUser
         
       } catch (error) {
-        this.error = 'خطا در به‌روزرسانی کاربر'
+        this.error = error.message || 'خطا در به‌روزرسانی کاربر'
         console.error('Update user error:', error)
         throw error
       } finally {
@@ -651,24 +693,63 @@ export const useSettingsStore = defineStore('settings', {
       this.error = null
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 300))
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.deleteUser(id)
         
-        const index = this.users.findIndex(user => user.id === id)
-        if (index === -1) {
+        if (response.success) {
+          const index = this.users.findIndex(user => user.id === id)
+          if (index !== -1) {
+            this.users.splice(index, 1)
+          }
+          
+          if (this.currentUser?.id === id) {
+            this.currentUser = null
+          }
+          
+          return true
+        } else {
+          throw new Error(response.message || 'خطا در حذف کاربر')
+        }
+        
+      } catch (error) {
+        this.error = error.message || 'خطا در حذف کاربر'
+        console.error('Delete user error:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async toggleUserStatus(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const user = this.users.find(u => u.id === id)
+        if (!user) {
           throw new Error('کاربر یافت نشد')
         }
         
-        this.users.splice(index, 1)
+        const newStatus = !user.isActive
+        const { usersApi } = await import('@/services/api')
+        const response = await usersApi.updateUser(id, { isActive: newStatus })
         
-        if (this.currentUser?.id === id) {
-          this.currentUser = null
+        if (response.success) {
+          const updatedUser = response.data
+          const index = this.users.findIndex(user => user.id === id)
+          
+          if (index !== -1) {
+            this.users[index] = updatedUser
+          }
+          
+          return updatedUser
+        } else {
+          throw new Error(response.message || 'خطا در تغییر وضعیت کاربر')
         }
         
-        return true
-        
       } catch (error) {
-        this.error = 'خطا در حذف کاربر'
-        console.error('Delete user error:', error)
+        this.error = error.message || 'خطا در تغییر وضعیت کاربر'
+        console.error('Toggle user status error:', error)
         throw error
       } finally {
         this.loading = false

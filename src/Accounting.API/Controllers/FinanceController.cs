@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Accounting.Application.Features.Finance.Commands;
 using Accounting.Application.Features.Finance.Queries;
 using Accounting.Application.Common.Authorization;
+using Accounting.Domain.Enums;
 using System;
 
 namespace Accounting.API.Controllers
@@ -342,5 +343,36 @@ namespace Accounting.API.Controllers
             
             return Ok(new { message = "Income deleted successfully" });
         }
+
+        /// <summary>
+        /// Update transfer status (confirm/cancel)
+        /// </summary>
+        [HttpPut("transfers/{id}/status")]
+        [Permission(Permissions.FinanceEdit)]
+        public async Task<IActionResult> UpdateTransferStatus(int id, [FromBody] UpdateTransferStatusRequest request)
+        {
+            var command = new UpdateTransferStatusCommand
+            {
+                Id = id,
+                Status = request.Status,
+                Notes = request.Notes,
+                Company = User.FindFirst("company")?.Value ?? "demo"
+            };
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            
+            return Ok(result.Value);
+        }
+    }
+
+    public class UpdateTransferStatusRequest
+    {
+        public TransferStatus Status { get; set; }
+        public string? Notes { get; set; }
     }
 }

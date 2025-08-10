@@ -122,7 +122,8 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { reportsApi } from '@/services/api'
 
 export default {
   name: 'FinanceReportView',
@@ -175,18 +176,46 @@ export default {
     // Methods
     const generateReport = async () => {
       loading.value = true
-      
-      // Simulate API call
-      setTimeout(() => {
-        reportData.value = {
-          totalAssets: 25000000,
-          totalLiabilities: 8000000,
-          equity: 17000000,
-          netIncome: 3500000,
-          details: getReportDetails()
+      try {
+        const params = {
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          reportType: reportType.value
         }
+        
+        const response = await reportsApi.getFinancialReport(params)
+        if (response.data.isSuccess) {
+          reportData.value = response.data.data
+        } else {
+          console.error('Failed to load financial report:', response.data.error)
+        }
+      } catch (error) {
+        console.error('Error loading financial report:', error)
+      } finally {
         loading.value = false
-      }, 1000)
+      }
+    }
+    
+    const loadFinancialReport = async () => {
+      loading.value = true
+      try {
+        const params = {
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          currency: 'IRR'
+        }
+        
+        const response = await reportsApi.getFinancialReport(params)
+        if (response.data.isSuccess) {
+          reportData.value = response.data.data
+        } else {
+          console.error('Failed to load financial report:', response.data.error)
+        }
+      } catch (error) {
+        console.error('Error loading financial report:', error)
+      } finally {
+        loading.value = false
+      }
     }
     
     const getReportDetails = () => {

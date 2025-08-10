@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { mockData } from '@/services/mockData'
+import { salesApi } from '@/services/api'
 
 export const useSalesStore = defineStore('sales', {
   state: () => ({
@@ -152,26 +152,54 @@ export const useSalesStore = defineStore('sales', {
   },
 
   actions: {
-    // Load documents from mock data
-    async loadDocuments(filters = null) {
+    async loadDocuments(filters = {}) {
       this.loading = true
       this.error = null
       
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        this.documents = [...mockData.salesDocuments]
-        this.pagination.total = this.documents.length
-        
-        // Apply filters if provided
-        if (filters) {
-          this.filters = { ...this.filters, ...filters }
+        const params = {
+          page: filters.page || 1,
+          pageSize: filters.pageSize || 10,
+          searchTerm: filters.searchTerm,
+          status: filters.status !== 'all' ? filters.status : null,
+          serviceType: filters.serviceType !== 'all' ? filters.serviceType : null,
+          dateFrom: filters.dateFrom,
+          dateTo: filters.dateTo,
+          sortBy: filters.sortBy || 'CreatedAt',
+          sortDirection: filters.sortDirection || 'desc'
         }
         
+        const response = await salesApi.getSalesDocuments(params)
+        if (response.data.isSuccess) {
+          this.documents = response.data.data.items
+          this.totalCount = response.data.data.totalCount
+          this.currentPage = response.data.data.currentPage
+          this.totalPages = response.data.data.totalPages
+        } else {
+          this.error = response.data.error || 'Failed to load documents'
+        }
       } catch (error) {
-        this.error = 'خطا در بارگذاری اسناد فروش'
-        console.error('Load documents error:', error)
+        this.error = error.message || 'An error occurred while loading documents'
+        console.error('Error loading sales documents:', error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async loadDocument(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const response = await salesApi.getSalesDocument(id)
+        if (response.data.isSuccess) {
+          this.currentDocument = response.data.data
+        } else {
+          this.error = response.data.error || 'Failed to load document'
+        }
+      } catch (error) {
+        this.error = error.message || 'An error occurred while loading the document'
+        console.error('Error loading sales document:', error)
       } finally {
         this.loading = false
       }

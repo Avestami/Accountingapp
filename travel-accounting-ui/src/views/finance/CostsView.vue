@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1 class="page-title">مدیریت هزینه‌ها</h1>
       <div class="header-actions">
-        <button class="btn btn-primary" @click="showAddModal = true">
+        <button class="btn btn-primary" @click="openCreateModal">
           <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
@@ -127,7 +127,7 @@
               <div class="action-buttons">
                 <button 
                   class="btn-icon btn-primary" 
-                  @click="editCost(cost)"
+                  @click="openEditModal(cost)"
                   title="ویرایش"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,6 +149,14 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Cost Modal -->
+    <CostModal
+      :isOpen="showModal"
+      :cost="selectedCost"
+      @close="closeModal"
+      @save="handleSaveCost"
+    />
   </div>
 </template>
 
@@ -156,9 +164,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { financeApi } from '@/services/api'
+import CostModal from '@/components/finance/CostModal.vue'
 
 export default {
   name: 'CostsView',
+  components: {
+    CostModal
+  },
   setup() {
     const router = useRouter()
     
@@ -169,7 +181,8 @@ export default {
     const selectedStatus = ref('')
     const dateFrom = ref('')
     const dateTo = ref('')
-    const showAddModal = ref(false)
+    const showModal = ref(false)
+    const selectedCost = ref(null)
     const loading = ref(false)
     const error = ref(null)
     const pagination = ref({
@@ -302,7 +315,9 @@ export default {
           loading.value = true
           error.value = null
           
-          // Note: Delete endpoint not implemented yet, using local removal
+          await financeApi.deleteCost(costId)
+          
+          // Remove from local state
           costs.value = costs.value.filter(cost => cost.id !== costId)
           
         } catch (err) {
@@ -360,9 +375,33 @@ export default {
       return labels[status] || status
     }
     
-    const editCost = (cost) => {
-      // Navigate to edit page or open modal
-      console.log('Edit cost:', cost)
+    const openCreateModal = () => {
+      selectedCost.value = null
+      showModal.value = true
+    }
+
+    const openEditModal = (cost) => {
+      selectedCost.value = cost
+      showModal.value = true
+    }
+
+    const closeModal = () => {
+      showModal.value = false
+      selectedCost.value = null
+    }
+
+    const handleSaveCost = async (costData) => {
+      if (selectedCost.value) {
+        // Update existing cost
+        const index = costs.value.findIndex(c => c.id === selectedCost.value.id)
+        if (index !== -1) {
+          costs.value[index] = { ...costs.value[index], ...costData }
+        }
+      } else {
+        // Create new cost
+        await createCost(costData)
+      }
+      closeModal()
     }
     
     // Lifecycle
@@ -377,7 +416,8 @@ export default {
       selectedStatus,
       dateFrom,
       dateTo,
-      showAddModal,
+      showModal,
+      selectedCost,
       totalCosts,
       pendingCosts,
       filteredCosts,
@@ -387,7 +427,10 @@ export default {
       getTypeLabel,
       getStatusClass,
       getStatusLabel,
-      editCost,
+      openCreateModal,
+      openEditModal,
+      closeModal,
+      handleSaveCost,
       deleteCost
     }
   }

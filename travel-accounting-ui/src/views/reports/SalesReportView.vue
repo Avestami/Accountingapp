@@ -133,7 +133,8 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { reportsApi } from '@/services/api'
 
 export default {
   name: 'SalesReportView',
@@ -180,51 +181,48 @@ export default {
     // Methods
     const generateReport = async () => {
       loading.value = true
-      
-      // Simulate API call
-      setTimeout(() => {
-        reportData.value = {
-          totalSales: 15000000,
-          totalTransactions: 45,
-          uniqueCustomers: 12,
-          averageTransaction: 333333,
-          details: [
-            {
-              id: 'S001',
-              date: '2024-01-15',
-              customer: 'شرکت الف',
-              product: 'بلیط هواپیما',
-              amount: 2500000,
-              transactions: 5,
-              quantity: 10
-            },
-            {
-              id: 'S002',
-              date: '2024-01-16',
-              customer: 'شرکت ب',
-              product: 'رزرو هتل',
-              amount: 1800000,
-              transactions: 3,
-              quantity: 6
-            },
-            {
-              id: 'S003',
-              date: '2024-01-17',
-              customer: 'شرکت ج',
-              product: 'تور گردشگری',
-              amount: 5200000,
-              transactions: 8,
-              quantity: 15
-            }
-          ]
+      try {
+        const params = {
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          reportType: reportType.value
         }
+        
+        const response = await reportsApi.getSalesReport(params)
+        if (response.data.isSuccess) {
+          reportData.value = response.data.data
+        } else {
+          console.error('Failed to load sales report:', response.data.error)
+        }
+      } catch (error) {
+        console.error('Error loading sales report:', error)
+      } finally {
         loading.value = false
-      }, 1000)
+      }
     }
-    
-    const exportReport = () => {
-      // Simulate export functionality
-      alert('گزارش با موفقیت خروجی گرفته شد')
+
+    const exportReport = async (format = 'excel') => {
+      try {
+        const params = {
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          format: format
+        }
+        
+        const response = await reportsApi.exportReport('sales', params)
+        
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `sales_report_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'json'}`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Error exporting report:', error)
+      }
     }
     
     const formatCurrency = (amount) => {

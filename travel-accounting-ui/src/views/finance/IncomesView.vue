@@ -4,7 +4,7 @@
       <div class="bg-white rounded-lg shadow-sm p-6">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-900">درآمدها</h1>
-          <AppButton @click="createNewIncome">
+          <AppButton @click="openCreateModal">
             ثبت درآمد جدید
           </AppButton>
         </div>
@@ -135,12 +135,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </button>
-                    <button @click="editIncome(income.id)" class="text-indigo-600 hover:text-indigo-900">
-                      <span class="sr-only">ویرایش</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
+                    <AppButton variant="secondary" size="sm" @click="editIncome(income.id)">
+                      ویرایش
+                    </AppButton>
                     <button @click="deleteIncome(income.id)" class="text-red-600 hover:text-red-900">
                       <span class="sr-only">حذف</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,6 +191,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Income Modal -->
+    <IncomeModal
+      :isOpen="showModal"
+      :income="selectedIncome"
+      @close="closeModal"
+      @save="handleSaveIncome"
+    />
   </div>
 </template>
 
@@ -201,14 +206,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFinanceStore } from '../../stores/finance'
+import { financeApi } from '../../services/api'
 import AppButton from '@/components/AppButton.vue'
 import AppSpinner from '@/components/AppSpinner.vue'
+import IncomeModal from '@/components/finance/IncomeModal.vue'
 
 export default {
   name: 'IncomesView',
   components: {
     AppButton,
-    AppSpinner
+    AppSpinner,
+    IncomeModal
   },
   setup() {
     const router = useRouter()
@@ -217,6 +225,8 @@ export default {
     // Reactive data
     const loading = ref(false)
     const error = ref(null)
+    const showModal = ref(false)
+    const selectedIncome = ref(null)
     const filters = ref({
       search: '',
       type: '',
@@ -289,7 +299,46 @@ export default {
     }
     
     const createNewIncome = () => {
-      router.push('/finance/incomes/create')
+      selectedIncome.value = null
+      showModal.value = true
+    }
+    
+    const openCreateModal = () => {
+      selectedIncome.value = null
+      showModal.value = true
+    }
+    
+    const openEditModal = (income) => {
+      selectedIncome.value = { ...income }
+      showModal.value = true
+    }
+    
+    const closeModal = () => {
+      showModal.value = false
+      selectedIncome.value = null
+    }
+    
+    const handleSaveIncome = async (incomeData) => {
+      try {
+        if (selectedIncome.value) {
+          // Update existing income
+          const index = financeStore.incomes.findIndex(income => income.id === selectedIncome.value.id)
+          if (index !== -1) {
+            financeStore.incomes[index] = { ...incomeData, id: selectedIncome.value.id }
+          }
+        } else {
+          // Create new income
+          const newIncome = {
+            ...incomeData,
+            id: Date.now() // Temporary ID
+          }
+          financeStore.incomes.unshift(newIncome)
+          financeStore.totalIncomes++
+        }
+        closeModal()
+      } catch (err) {
+        console.error('Error saving income:', err)
+      }
     }
     
     const viewIncome = (id) => {
@@ -297,17 +346,19 @@ export default {
     }
     
     const editIncome = (id) => {
-      router.push(`/finance/incomes/${id}/edit`)
+      const income = financeStore.incomes.find(income => income.id === id)
+      if (income) {
+        openEditModal(income)
+      }
     }
     
     const deleteIncome = async (id) => {
       if (confirm('آیا از حذف این درآمد اطمینان دارید؟')) {
         loading.value = true
         try {
-          // TODO: Implement delete API call
-          // await financeApi.deleteIncome(id)
+          await financeApi.deleteIncome(id)
           
-          // For now, remove from local state
+          // Remove from local state
           const index = financeStore.incomes.findIndex(income => income.id === id)
           if (index !== -1) {
             financeStore.incomes.splice(index, 1)
@@ -377,11 +428,17 @@ export default {
     return {
       loading,
       error,
+      showModal,
+      selectedIncome,
       filters,
       pagination,
       incomes,
       totalIncomes,
       loadIncomes,
+      openCreateModal,
+      openEditModal,
+      closeModal,
+      handleSaveIncome,
       createNewIncome,
       viewIncome,
       editIncome,

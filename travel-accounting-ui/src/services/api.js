@@ -1,5 +1,5 @@
 // API Service for making HTTP requests
-const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:5000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Generic API client
 class ApiClient {
@@ -161,6 +161,18 @@ export const financeApi = {
 
   async createTransfer(transferData) {
     return apiClient.post('/finance/transfers', transferData)
+  },
+
+  async updateTransferStatus(id, statusData) {
+    return apiClient.put(`/finance/transfers/${id}/status`, statusData)
+  },
+
+  async deleteCost(id) {
+    return apiClient.delete(`/finance/costs/${id}`)
+  },
+
+  async deleteIncome(id) {
+    return apiClient.delete(`/finance/incomes/${id}`)
   },
 
   // Export
@@ -415,5 +427,69 @@ export const userProfileApi = {
   }),
   deleteProfilePicture: () => apiClient.delete('/userprofile/profile-picture')
 }
+
+// Reports API
+const reportsApi = {
+  // Get financial report
+  getFinancialReport: (params = {}) => 
+    ApiClient.get('/reports/financial', { params }),
+  
+  // Get sales report
+  getSalesReport: (params = {}) => 
+    ApiClient.get('/reports/sales', { params }),
+  
+  // Get profit and loss report
+  getProfitLossReport: (params = {}) => 
+    ApiClient.get('/reports/profit-loss', { params }),
+  
+  // Get balance sheet report
+  getBalanceSheet: (params = {}) => 
+    ApiClient.get('/reports/balance-sheet', { params }),
+  
+  // Export report
+  exportReport: (reportType, params = {}) => 
+    ApiClient.get(`/reports/export/${reportType}`, { 
+      params,
+      responseType: 'blob'
+    })
+};
+
+// Sales API
+const salesApi = {
+  // Get sales documents with filtering and pagination
+  getSalesDocuments: (params = {}) => 
+    ApiClient.get('/sales/documents', { params }),
+  
+  // Get a specific sales document by ID
+  getSalesDocument: (id) => 
+    ApiClient.get(`/sales/documents/${id}`),
+  
+  // Create a new sales document
+  createSalesDocument: (data) => 
+    ApiClient.post('/sales/documents', data),
+  
+  // Update an existing sales document
+  updateSalesDocument: (id, data) => 
+    ApiClient.put(`/sales/documents/${id}`, data),
+  
+  // Delete a sales document
+  deleteSalesDocument: (id) => 
+    ApiClient.delete(`/sales/documents/${id}`),
+  
+  // Issue a ticket
+  issueTicket: (id) => 
+    ApiClient.post(`/sales/documents/${id}/issue`),
+  
+  // Cancel a ticket
+  cancelTicket: (id, data) => 
+    ApiClient.post(`/sales/documents/${id}/cancel`, data),
+  
+  // Get sales statistics
+  getSalesStatistics: (params = {}) => 
+    ApiClient.get('/sales/statistics', { params })
+};
+
+// Export the API client and services
+export { ApiClient, accountsApi, authApi, financeApi, reportsApi, salesApi };
 
 export default apiClient
