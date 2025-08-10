@@ -2,6 +2,7 @@ using Accounting.Application.Common.Models;
 using Accounting.Application.Features.Reports.Queries;
 using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
+using Accounting.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -37,18 +38,18 @@ namespace Accounting.Application.Features.Reports.Handlers
 
                 // Calculate revenue from vouchers
                 var revenueVouchers = await _context.Vouchers
-                    .Include(v => v.VoucherEntries)
+                    .Include(v => v.Entries)
                     .ThenInclude(ve => ve.Account)
-                    .Where(v => v.Date >= request.StartDate && v.Date <= request.EndDate)
-                    .Where(v => v.VoucherEntries.Any(ve => revenueAccounts.Contains(ve.Account)))
+                    .Where(v => v.VoucherDate >= request.StartDate && v.VoucherDate <= request.EndDate)
+                    .Where(v => v.Entries.Any(ve => revenueAccounts.Contains(ve.Account)))
                     .ToListAsync(cancellationToken);
 
                 // Calculate expenses from vouchers
                 var expenseVouchers = await _context.Vouchers
-                    .Include(v => v.VoucherEntries)
+                    .Include(v => v.Entries)
                     .ThenInclude(ve => ve.Account)
-                    .Where(v => v.Date >= request.StartDate && v.Date <= request.EndDate)
-                    .Where(v => v.VoucherEntries.Any(ve => expenseAccounts.Contains(ve.Account)))
+                    .Where(v => v.VoucherDate >= request.StartDate && v.VoucherDate <= request.EndDate)
+                    .Where(v => v.Entries.Any(ve => expenseAccounts.Contains(ve.Account)))
                     .ToListAsync(cancellationToken);
 
                 // Calculate revenue items
@@ -58,16 +59,16 @@ namespace Accounting.Application.Features.Reports.Handlers
                 foreach (var account in revenueAccounts)
                 {
                     var accountRevenue = revenueVouchers
-                        .SelectMany(v => v.VoucherEntries)
+                        .SelectMany(v => v.Entries)
                         .Where(ve => ve.AccountId == account.Id)
-                        .Sum(ve => ve.Credit - ve.Debit);
+                        .Sum(ve => ve.TransactionType == TransactionType.Credit ? ve.Amount : -ve.Amount);
 
                     if (accountRevenue != 0)
                     {
                         revenueItems.Add(new ProfitLossItemDto
                         {
-                            AccountName = account.Name,
-                            AccountCode = account.Code,
+                            AccountName = account.AccountName,
+                            AccountCode = account.AccountCode,
                             Amount = accountRevenue
                         });
                         totalRevenue += accountRevenue;
@@ -81,16 +82,16 @@ namespace Accounting.Application.Features.Reports.Handlers
                 foreach (var account in expenseAccounts)
                 {
                     var accountExpense = expenseVouchers
-                        .SelectMany(v => v.VoucherEntries)
+                        .SelectMany(v => v.Entries)
                         .Where(ve => ve.AccountId == account.Id)
-                        .Sum(ve => ve.Debit - ve.Credit);
+                        .Sum(ve => ve.TransactionType == TransactionType.Debit ? ve.Amount : -ve.Amount);
 
                     if (accountExpense != 0)
                     {
                         expenseItems.Add(new ProfitLossItemDto
                         {
-                            AccountName = account.Name,
-                            AccountCode = account.Code,
+                            AccountName = account.AccountName,
+                            AccountCode = account.AccountCode,
                             Amount = accountExpense
                         });
                         totalExpenses += accountExpense;
