@@ -3,8 +3,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Accounting.Application.Common.Interfaces;
+using Accounting.Application.Common.Models;
+using Accounting.Application.Common.Queries;
 using Accounting.Application.Features.Tickets.Queries;
+using Accounting.Application.Interfaces;
 using Accounting.Domain.Enums;
 
 namespace Accounting.Application.Features.Tickets.Handlers

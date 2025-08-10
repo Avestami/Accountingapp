@@ -38,8 +38,8 @@ services:
   # Vue.js Frontend
   ui:
     build:
-      context: .
-      dockerfile: travel-accounting-ui/Dockerfile
+      context: ./travel-accounting-ui
+      dockerfile: Dockerfile
     container_name: accounting-ui
     depends_on:
       - api

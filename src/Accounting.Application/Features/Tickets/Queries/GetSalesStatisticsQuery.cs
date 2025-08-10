@@ -1,5 +1,6 @@
 using System;
-using Accounting.Application.Common.Interfaces;
+using Accounting.Application.Common.Models;
+using Accounting.Application.Common.Queries;
 
 namespace Accounting.Application.Features.Tickets.Queries
 {

@@ -14,15 +14,17 @@
             v-model="selectedReportType" 
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
+            <option value="sales">گزارش فروش</option>
+            <option value="financial">گزارش مالی</option>
+            <option value="profit-loss">صورت سود و زیان</option>
             <option value="balance-sheet">ترازنامه</option>
-            <option value="income-statement">صورت سود و زیان</option>
             <option value="cash-flow">صورت جریان وجه نقد</option>
-            <option value="trial-balance">تراز آزمایشی</option>
           </select>
         </div>
         
+        <!-- Filters Section -->
         <div class="w-full md:w-auto flex flex-wrap gap-4">
-          <div v-if="selectedReportType === 'balance-sheet' || selectedReportType === 'trial-balance'" class="w-full md:w-auto">
+          <div v-if="selectedReportType === 'balance-sheet'" class="w-full md:w-auto">
             <label class="block text-sm font-medium text-gray-700 mb-1">تاریخ</label>
             <PersianDatePicker 
               v-model="reportDate" 
@@ -31,7 +33,7 @@
             />
           </div>
           
-          <div v-if="selectedReportType === 'income-statement' || selectedReportType === 'cash-flow'" class="w-full md:w-auto">
+          <div v-else class="w-full md:w-auto">
             <label class="block text-sm font-medium text-gray-700 mb-1">از تاریخ</label>
             <PersianDatePicker 
               v-model="dateFrom" 
@@ -40,7 +42,7 @@
             />
           </div>
           
-          <div v-if="selectedReportType === 'income-statement' || selectedReportType === 'cash-flow'" class="w-full md:w-auto">
+          <div v-if="selectedReportType !== 'balance-sheet'" class="w-full md:w-auto">
             <label class="block text-sm font-medium text-gray-700 mb-1">تا تاریخ</label>
             <PersianDatePicker 
               v-model="dateTo" 
@@ -48,9 +50,44 @@
               placeholder="تا تاریخ"
             />
           </div>
+
+          <!-- Search Filter -->
+          <div v-if="selectedReportType === 'sales' || selectedReportType === 'financial'" class="w-full md:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1">جستجو</label>
+            <input 
+              v-model="searchTerm"
+              type="text"
+              class="w-full md:w-48 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="جستجو در گزارش..."
+            />
+          </div>
+
+          <!-- Airlines Filter for Sales Report -->
+          <div v-if="selectedReportType === 'sales'" class="w-full md:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1">ایرلاین</label>
+            <select 
+              v-model="selectedAirlines"
+              multiple
+              class="w-full md:w-48 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option v-for="airline in availableAirlines" :key="airline" :value="airline">{{ airline }}</option>
+            </select>
+          </div>
+
+          <!-- Categories Filter -->
+          <div v-if="selectedReportType === 'financial' || selectedReportType === 'profit-loss'" class="w-full md:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
+            <select 
+              v-model="selectedCategories"
+              multiple
+              class="w-full md:w-48 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
+            </select>
+          </div>
         </div>
         
-        <div class="flex-shrink-0 flex items-end">
+        <div class="flex-shrink-0 flex items-end gap-2">
           <AppButton 
             type="primary" 
             icon="refresh" 
@@ -59,6 +96,34 @@
           >
             تولید گزارش
           </AppButton>
+          
+          <!-- Export Dropdown -->
+          <div v-if="currentReport" class="relative">
+            <AppButton 
+              type="secondary" 
+              icon="download"
+              @click="toggleExportMenu"
+            >
+              خروجی
+            </AppButton>
+            
+            <div v-if="showExportMenu" class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+              <div class="py-1">
+                <button @click="exportReport('pdf')" class="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  خروجی PDF
+                </button>
+                <button @click="exportReport('excel')" class="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  خروجی Excel
+                </button>
+                <button @click="exportReport('csv')" class="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  خروجی CSV
+                </button>
+                <button @click="exportReport('json')" class="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  خروجی JSON
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -91,12 +156,120 @@
       <h3 class="mt-2 text-sm font-medium text-gray-900">گزارشی انتخاب نشده است</h3>
       <p class="mt-1 text-sm text-gray-500">برای مشاهده گزارش، نوع گزارش و بازه زمانی را انتخاب کرده و دکمه تولید گزارش را بزنید.</p>
     </div>
+
+    <!-- Sales Report -->
+    <div v-else-if="selectedReportType === 'sales' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-800">گزارش فروش</h2>
+        <div class="text-sm text-gray-600">دوره: {{ formatDate(currentReport.startDate) }} تا {{ formatDate(currentReport.endDate) }}</div>
+      </div>
+      
+      <div class="p-4">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 mb-1">تعداد بلیط</div>
+            <div class="text-2xl font-bold text-blue-900">{{ formatNumber(currentReport.totalTickets) }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 mb-1">کل درآمد</div>
+            <div class="text-2xl font-bold text-green-900">{{ formatCurrency(currentReport.totalRevenue) }}</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 mb-1">میانگین قیمت بلیط</div>
+            <div class="text-2xl font-bold text-purple-900">{{ formatCurrency(currentReport.averageTicketValue) }}</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 mb-1">تعداد بلیط کنسل شده</div>
+            <div class="text-2xl font-bold text-orange-900">{{ formatNumber(currentReport.canceledTickets) }}</div>
+          </div>
+        </div>
+
+        <!-- Airline Summary -->
+        <div v-if="currentReport.airlineSummary && currentReport.airlineSummary.length > 0" class="mb-6">
+          <h3 class="text-lg font-medium mb-3">خلاصه بر اساس ایرلاین</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ایرلاین</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تعداد بلیط</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">درآمد</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">درصد از کل</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="airline in currentReport.airlineSummary" :key="airline.airline">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ airline.airline }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatNumber(airline.ticketCount) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatCurrency(airline.revenue) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ airline.percentage.toFixed(1) }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Report -->
+    <div v-else-if="selectedReportType === 'financial' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-800">گزارش مالی</h2>
+        <div class="text-sm text-gray-600">دوره: {{ formatDate(currentReport.startDate) }} تا {{ formatDate(currentReport.endDate) }}</div>
+      </div>
+      
+      <div class="p-4">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 mb-1">کل درآمد</div>
+            <div class="text-2xl font-bold text-green-900">{{ formatCurrency(currentReport.totalIncome) }}</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 mb-1">کل هزینه</div>
+            <div class="text-2xl font-bold text-red-900">{{ formatCurrency(currentReport.totalCosts) }}</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 mb-1">سود خالص</div>
+            <div class="text-2xl font-bold" :class="currentReport.netProfit >= 0 ? 'text-blue-900' : 'text-red-900'">
+              {{ formatCurrency(currentReport.netProfit) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Income and Cost Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Income Items -->
+          <div v-if="currentReport.incomeItems && currentReport.incomeItems.length > 0">
+            <h3 class="text-lg font-medium mb-3">درآمدها</h3>
+            <div class="space-y-2">
+              <div v-for="item in currentReport.incomeItems" :key="item.category" class="flex justify-between p-3 bg-green-50 rounded">
+                <span>{{ item.category }}</span>
+                <span class="font-medium">{{ formatCurrency(item.amount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cost Items -->
+          <div v-if="currentReport.costItems && currentReport.costItems.length > 0">
+            <h3 class="text-lg font-medium mb-3">هزینه‌ها</h3>
+            <div class="space-y-2">
+              <div v-for="item in currentReport.costItems" :key="item.category" class="flex justify-between p-3 bg-red-50 rounded">
+                <span>{{ item.category }}</span>
+                <span class="font-medium">{{ formatCurrency(item.amount) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <!-- Balance Sheet Report -->
     <div v-else-if="selectedReportType === 'balance-sheet' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-lg font-semibold text-gray-800">ترازنامه</h2>
-        <div class="text-sm text-gray-600">تاریخ: {{ formatDate(currentReport.date) }}</div>
+        <div class="text-sm text-gray-600">تاریخ: {{ formatDate(currentReport.asOfDate) }}</div>
       </div>
       
       <div class="p-4">
@@ -109,41 +282,21 @@
               <div class="space-y-2 mb-4">
                 <div class="flex justify-between">
                   <span>وجه نقد</span>
-                  <span>{{ formatCurrency(currentReport.assets.current.cash) }}</span>
+                  <span>{{ formatCurrency(currentReport.assets.currentAssets.cash) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>حساب‌های دریافتنی</span>
-                  <span>{{ formatCurrency(currentReport.assets.current.accountsReceivable) }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>موجودی کالا</span>
-                  <span>{{ formatCurrency(currentReport.assets.current.inventory) }}</span>
+                  <span>{{ formatCurrency(currentReport.assets.currentAssets.accountsReceivable) }}</span>
                 </div>
                 <div class="flex justify-between font-medium border-t pt-2">
                   <span>جمع دارایی‌های جاری</span>
-                  <span>{{ formatCurrency(currentReport.assets.current.total) }}</span>
-                </div>
-              </div>
-              
-              <h4 class="font-medium mb-2">دارایی‌های غیرجاری</h4>
-              <div class="space-y-2 mb-4">
-                <div class="flex justify-between">
-                  <span>تجهیزات</span>
-                  <span>{{ formatCurrency(currentReport.assets.nonCurrent.equipment) }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>ساختمان</span>
-                  <span>{{ formatCurrency(currentReport.assets.nonCurrent.buildings) }}</span>
-                </div>
-                <div class="flex justify-between font-medium border-t pt-2">
-                  <span>جمع دارایی‌های غیرجاری</span>
-                  <span>{{ formatCurrency(currentReport.assets.nonCurrent.total) }}</span>
+                  <span>{{ formatCurrency(currentReport.assets.totalCurrentAssets) }}</span>
                 </div>
               </div>
               
               <div class="flex justify-between font-bold border-t border-gray-400 pt-2">
                 <span>جمع کل دارایی‌ها</span>
-                <span>{{ formatCurrency(currentReport.assets.total) }}</span>
+                <span>{{ formatCurrency(currentReport.assets.totalAssets) }}</span>
               </div>
             </div>
           </div>
@@ -158,33 +311,17 @@
                 <div class="space-y-2 mb-4">
                   <div class="flex justify-between">
                     <span>حساب‌های پرداختنی</span>
-                    <span>{{ formatCurrency(currentReport.liabilities.current.accountsPayable) }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>بدهی کوتاه‌مدت</span>
-                    <span>{{ formatCurrency(currentReport.liabilities.current.shortTermDebt) }}</span>
+                    <span>{{ formatCurrency(currentReport.liabilities.currentLiabilities.accountsPayable) }}</span>
                   </div>
                   <div class="flex justify-between font-medium border-t pt-2">
                     <span>جمع بدهی‌های جاری</span>
-                    <span>{{ formatCurrency(currentReport.liabilities.current.total) }}</span>
-                  </div>
-                </div>
-                
-                <h4 class="font-medium mb-2">بدهی‌های غیرجاری</h4>
-                <div class="space-y-2 mb-4">
-                  <div class="flex justify-between">
-                    <span>بدهی بلندمدت</span>
-                    <span>{{ formatCurrency(currentReport.liabilities.nonCurrent.longTermDebt) }}</span>
-                  </div>
-                  <div class="flex justify-between font-medium border-t pt-2">
-                    <span>جمع بدهی‌های غیرجاری</span>
-                    <span>{{ formatCurrency(currentReport.liabilities.nonCurrent.total) }}</span>
+                    <span>{{ formatCurrency(currentReport.liabilities.totalCurrentLiabilities) }}</span>
                   </div>
                 </div>
                 
                 <div class="flex justify-between font-medium border-t border-gray-400 pt-2">
                   <span>جمع کل بدهی‌ها</span>
-                  <span>{{ formatCurrency(currentReport.liabilities.total) }}</span>
+                  <span>{{ formatCurrency(currentReport.liabilities.totalLiabilities) }}</span>
                 </div>
               </div>
             </div>
@@ -195,9 +332,380 @@
               <div class="p-4">
                 <div class="space-y-2 mb-4">
                   <div class="flex justify-between">
-                    <span>سرمایه</span>
-                    <span>{{ formatCurrency(currentReport.equity.capital) }}</span>
+                    <span>سود انباشته</span>
+                    <span>{{ formatCurrency(currentReport.equity.retainedEarnings) }}</span>
                   </div>
+                  <div class="flex justify-between font-medium border-t pt-2">
+                    <span>جمع حقوق صاحبان سهام</span>
+                    <span>{{ formatCurrency(currentReport.equity.totalEquity) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profit/Loss Report -->
+    <div v-else-if="selectedReportType === 'profit-loss' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-800">صورت سود و زیان</h2>
+        <div class="text-sm text-gray-600">دوره: {{ formatDate(currentReport.startDate) }} تا {{ formatDate(currentReport.endDate) }}</div>
+      </div>
+      
+      <div class="p-4">
+        <!-- Revenue Section -->
+        <div class="mb-6">
+          <div class="bg-gray-50 px-4 py-2 border-b font-medium">درآمدها</div>
+          <div class="p-4 space-y-2">
+            <div v-if="currentReport.revenueBreakdown" class="space-y-2">
+              <div class="flex justify-between">
+                <span>فروش</span>
+                <span>{{ formatCurrency(currentReport.revenueBreakdown.sales) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>خدمات</span>
+                <span>{{ formatCurrency(currentReport.revenueBreakdown.services) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>سایر درآمدها</span>
+                <span>{{ formatCurrency(currentReport.revenueBreakdown.other) }}</span>
+              </div>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>جمع درآمدها</span>
+              <span>{{ formatCurrency(currentReport.totalRevenue) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expenses Section -->
+        <div class="mb-6">
+          <div class="bg-gray-50 px-4 py-2 border-b font-medium">هزینه‌ها</div>
+          <div class="p-4 space-y-2">
+            <div v-if="currentReport.expenses && currentReport.expenses.length > 0" class="space-y-2">
+              <div v-for="expense in currentReport.expenses" :key="expense.category" class="flex justify-between">
+                <span>{{ expense.category }}</span>
+                <span>{{ formatCurrency(expense.amount) }}</span>
+              </div>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>جمع هزینه‌ها</span>
+              <span>{{ formatCurrency(currentReport.totalExpenses) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Net Profit -->
+        <div class="border-t-2 border-gray-300 pt-4">
+          <div class="flex justify-between text-xl font-bold">
+            <span>سود خالص</span>
+            <span :class="currentReport.netProfit >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ formatCurrency(currentReport.netProfit) }}
+            </span>
+          </div>
+          <div v-if="currentReport.profitMargin !== undefined" class="flex justify-between text-sm text-gray-600 mt-2">
+            <span>حاشیه سود</span>
+            <span>{{ currentReport.profitMargin.toFixed(2) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash Flow Report -->
+    <div v-else-if="selectedReportType === 'cash-flow' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-800">صورت جریان وجه نقد</h2>
+        <div class="text-sm text-gray-600">دوره: {{ formatDate(currentReport.startDate) }} تا {{ formatDate(currentReport.endDate) }}</div>
+      </div>
+      
+      <div class="p-4">
+        <!-- Operating Activities -->
+        <div class="mb-6">
+          <div class="bg-gray-50 px-4 py-2 border-b font-medium">فعالیت‌های عملیاتی</div>
+          <div class="p-4 space-y-2">
+            <div v-if="currentReport.operatingActivities" class="space-y-2">
+              <div class="flex justify-between">
+                <span>دریافت از مشتریان</span>
+                <span>{{ formatCurrency(currentReport.operatingActivities.cashFromCustomers) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>پرداخت به تامین‌کنندگان</span>
+                <span>{{ formatCurrency(currentReport.operatingActivities.cashToSuppliers) }}</span>
+              </div>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>خالص جریان نقد از فعالیت‌های عملیاتی</span>
+              <span>{{ formatCurrency(currentReport.operatingActivities?.netCashFlow || 0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="border-t-2 border-gray-300 pt-4">
+          <div class="space-y-2">
+            <div class="flex justify-between font-bold">
+              <span>خالص تغییر در وجه نقد</span>
+              <span>{{ formatCurrency(currentReport.netCashFlow) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>وجه نقد در ابتدای دوره</span>
+              <span>{{ formatCurrency(currentReport.beginningCashBalance) }}</span>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>وجه نقد در پایان دوره</span>
+              <span>{{ formatCurrency(currentReport.endingCashBalance) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cash Flow Report -->
+    <div v-else-if="selectedReportType === 'cash-flow' && currentReport" class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-800">صورت جریان وجه نقد</h2>
+        <div class="text-sm text-gray-600">دوره: {{ formatDate(currentReport.startDate) }} تا {{ formatDate(currentReport.endDate) }}</div>
+      </div>
+      
+      <div class="p-4">
+        <!-- Operating Activities -->
+        <div class="mb-6">
+          <div class="bg-gray-50 px-4 py-2 border-b font-medium">فعالیت‌های عملیاتی</div>
+          <div class="p-4 space-y-2">
+            <div v-if="currentReport.operatingActivities" class="space-y-2">
+              <div class="flex justify-between">
+                <span>دریافت از مشتریان</span>
+                <span>{{ formatCurrency(currentReport.operatingActivities.cashFromCustomers) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>پرداخت به تامین‌کنندگان</span>
+                <span>{{ formatCurrency(currentReport.operatingActivities.cashToSuppliers) }}</span>
+              </div>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>خالص جریان نقد از فعالیت‌های عملیاتی</span>
+              <span>{{ formatCurrency(currentReport.operatingActivities?.netCashFlow || 0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="border-t-2 border-gray-300 pt-4">
+          <div class="space-y-2">
+            <div class="flex justify-between font-bold">
+              <span>خالص تغییر در وجه نقد</span>
+              <span>{{ formatCurrency(currentReport.netCashFlow) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>وجه نقد در ابتدای دوره</span>
+              <span>{{ formatCurrency(currentReport.beginningCashBalance) }}</span>
+            </div>
+            <div class="flex justify-between font-bold border-t pt-2">
+              <span>وجه نقد در پایان دوره</span>
+              <span>{{ formatCurrency(currentReport.endingCashBalance) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Report Actions -->
+    <div v-if="currentReport" class="mt-6 flex justify-end space-x-4 space-x-reverse">
+      <AppButton type="secondary" icon="printer" @click="printReport">
+        چاپ گزارش
+      </AppButton>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useReportsStore } from '../stores/reports'
+import PersianDatePicker from '../components/PersianDatePicker.vue'
+import AppButton from '../components/AppButton.vue'
+import AppSpinner from '../components/AppSpinner.vue'
+
+const reportsStore = useReportsStore()
+
+// State
+const selectedReportType = ref('sales')
+const reportDate = ref(new Date().toISOString().split('T')[0])
+const dateFrom = ref(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0])
+const dateTo = ref(new Date().toISOString().split('T')[0])
+const currentReport = ref(null)
+const isLoading = ref(false)
+const error = ref(null)
+const showExportMenu = ref(false)
+
+// Filter states
+const searchTerm = ref('')
+const selectedAirlines = ref([])
+const selectedCategories = ref([])
+
+// Available options for filters
+const availableAirlines = ref(['Iran Air', 'Mahan Air', 'Aseman Airlines', 'Taban Air'])
+const availableCategories = ref(['فروش', 'خدمات', 'هزینه عملیاتی', 'هزینه اداری'])
+
+// Computed
+const isDateRangeValid = computed(() => {
+  if (selectedReportType.value === 'balance-sheet') {
+    return !!reportDate.value
+  } else {
+    return !!dateFrom.value && !!dateTo.value && new Date(dateFrom.value) <= new Date(dateTo.value)
+  }
+})
+
+// Watch for report type changes to clear current report
+watch(selectedReportType, () => {
+  currentReport.value = null
+  error.value = null
+})
+
+// Methods
+async function generateReport() {
+  if (!isDateRangeValid.value) {
+    error.value = 'لطفاً تاریخ‌های معتبر وارد کنید'
+    return
+  }
+  
+  error.value = null
+  isLoading.value = true
+  
+  try {
+    const filters = {
+      searchTerm: searchTerm.value,
+      airlines: selectedAirlines.value,
+      categories: selectedCategories.value,
+      pageNumber: 1,
+      pageSize: 1000
+    }
+
+    switch (selectedReportType.value) {
+      case 'sales':
+        currentReport.value = await reportsStore.generateSalesReport({
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          ...filters
+        })
+        break
+      case 'financial':
+        currentReport.value = await reportsStore.generateFinancialReport({
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          ...filters
+        })
+        break
+      case 'profit-loss':
+        currentReport.value = await reportsStore.generateProfitLossReport({
+          startDate: dateFrom.value,
+          endDate: dateTo.value,
+          ...filters
+        })
+        break
+      case 'balance-sheet':
+        currentReport.value = await reportsStore.generateBalanceSheetReport({
+          asOfDate: reportDate.value
+        })
+        break
+      case 'cash-flow':
+        currentReport.value = await reportsStore.generateCashFlowReport({
+          startDate: dateFrom.value,
+          endDate: dateTo.value
+        })
+        break
+      default:
+        throw new Error('نوع گزارش نامعتبر است')
+    }
+  } catch (err) {
+    error.value = err.message || 'خطا در تولید گزارش'
+    console.error('Error generating report:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function toggleExportMenu() {
+  showExportMenu.value = !showExportMenu.value
+}
+
+async function exportReport(format) {
+  showExportMenu.value = false
+  
+  if (!currentReport.value) {
+    error.value = 'ابتدا گزارش را تولید کنید'
+    return
+  }
+
+  try {
+    const exportData = {
+      startDate: selectedReportType.value === 'balance-sheet' ? null : dateFrom.value,
+      endDate: selectedReportType.value === 'balance-sheet' ? reportDate.value : dateTo.value,
+      format: format,
+      searchTerm: searchTerm.value,
+      categories: selectedCategories.value,
+      airlines: selectedAirlines.value
+    }
+
+    await reportsStore.exportReport(selectedReportType.value, exportData)
+  } catch (err) {
+    error.value = err.message || 'خطا در خروجی گزارش'
+    console.error('Error exporting report:', err)
+  }
+}
+
+function printReport() {
+  window.print()
+}
+
+// Formatting helpers
+function formatCurrency(value) {
+  if (value === null || value === undefined) return '0 ریال'
+  return new Intl.NumberFormat('fa-IR', {
+    style: 'currency',
+    currency: 'IRR',
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(value).replace('ریال', '') + ' ریال'
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined) return '0'
+  return new Intl.NumberFormat('fa-IR').format(value)
+}
+
+function formatDate(dateString) {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fa-IR')
+}
+
+// Close export menu when clicking outside
+onMounted(() => {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      showExportMenu.value = false
+    }
+  })
+})
+</script>
+
+<style scoped>
+@media print {
+  .reports-view > div:first-child,
+  .bg-white > div:first-child,
+  .mt-6 {
+    display: none;
+  }
+  
+  .bg-white {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+}
+</style>
                   <div class="flex justify-between">
                     <span>سود انباشته</span>
                     <span>{{ formatCurrency(currentReport.equity.retainedEarnings) }}</span>
@@ -454,30 +962,37 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useFinanceStore } from '../stores/finance'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useReportsStore } from '../stores/reports'
 import PersianDatePicker from '../components/PersianDatePicker.vue'
 import AppButton from '../components/AppButton.vue'
 import AppSpinner from '../components/AppSpinner.vue'
 
-const financeStore = useFinanceStore()
+const reportsStore = useReportsStore()
 
 // State
-const selectedReportType = ref('balance-sheet')
+const selectedReportType = ref('sales')
 const reportDate = ref(new Date().toISOString().split('T')[0])
-const dateFrom = ref(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]) // Start of current year
+const dateFrom = ref(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0])
 const dateTo = ref(new Date().toISOString().split('T')[0])
 const currentReport = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
+const showExportMenu = ref(false)
 
 // Computed
 const isDateRangeValid = computed(() => {
-  if (selectedReportType.value === 'balance-sheet' || selectedReportType.value === 'trial-balance') {
+  if (selectedReportType.value === 'balance-sheet') {
     return !!reportDate.value
   } else {
     return !!dateFrom.value && !!dateTo.value && new Date(dateFrom.value) <= new Date(dateTo.value)
   }
+})
+
+// Watch for report type changes to clear current report
+watch(selectedReportType, () => {
+  currentReport.value = null
+  error.value = null
 })
 
 // Methods
@@ -519,17 +1034,9 @@ function printReport() {
   window.print()
 }
 
-function exportReport() {
-  // Mock export functionality
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const filename = `${selectedReportType.value}-${timestamp}.xlsx`
-  
-  // Show success message (in a real app, this would actually generate and download an Excel file)
-  alert(`گزارش با نام ${filename} با موفقیت ذخیره شد.`)
-}
-
 // Formatting helpers
 function formatCurrency(value) {
+  if (value === null || value === undefined) return '0 ریال'
   return new Intl.NumberFormat('fa-IR', {
     style: 'currency',
     currency: 'IRR',
@@ -539,21 +1046,24 @@ function formatCurrency(value) {
 }
 
 function formatNumber(value) {
+  if (value === null || value === undefined) return '0'
   return new Intl.NumberFormat('fa-IR').format(value)
 }
 
 function formatDate(dateString) {
   if (!dateString) return ''
   
-  // In a real app, this would convert to Persian date
-  // For now, just format the ISO date
   const date = new Date(dateString)
   return date.toLocaleDateString('fa-IR')
 }
 
-// Initialize with balance sheet report on mount
-onMounted(async () => {
-  await generateReport()
+// Close export menu when clicking outside
+onMounted(() => {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      showExportMenu.value = false
+    }
+  })
 })
 </script>
 

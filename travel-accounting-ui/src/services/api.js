@@ -255,10 +255,47 @@ export const reportsApi = {
     return apiClient.get('/reports/sales', params)
   },
 
+  async getProfitLossReport(params = {}) {
+    return apiClient.get('/reports/profit-loss', params)
+  },
+
+  async getBalanceSheetReport(params = {}) {
+    return apiClient.get('/reports/balance-sheet', params)
+  },
+
+  async getCashFlowReport(params = {}) {
+    return apiClient.get('/reports/cash-flow', params)
+  },
+
   async getAccountsReport(params = {}) {
     return apiClient.get('/reports/accounts', params)
   },
 
+  async exportSalesReport(exportData) {
+    return apiClient.post('/reports/export/sales', exportData, {
+      responseType: 'blob'
+    })
+  },
+
+  async exportFinancialReport(exportData) {
+    return apiClient.post('/reports/export/financial', exportData, {
+      responseType: 'blob'
+    })
+  },
+
+  async exportProfitLossReport(exportData) {
+    return apiClient.post('/reports/export/profit-loss', exportData, {
+      responseType: 'blob'
+    })
+  },
+
+  async exportBalanceSheetReport(exportData) {
+    return apiClient.post('/reports/export/balance-sheet', exportData, {
+      responseType: 'blob'
+    })
+  },
+
+  // Legacy export method for backward compatibility
   async exportReport(reportType, format, params = {}) {
     return apiClient.get(`/reports/${reportType}/export/${format}`, params)
   }
@@ -428,68 +465,5 @@ export const userProfileApi = {
   deleteProfilePicture: () => apiClient.delete('/userprofile/profile-picture')
 }
 
-// Reports API
-const reportsApi = {
-  // Get financial report
-  getFinancialReport: (params = {}) => 
-    ApiClient.get('/reports/financial', { params }),
-  
-  // Get sales report
-  getSalesReport: (params = {}) => 
-    ApiClient.get('/reports/sales', { params }),
-  
-  // Get profit and loss report
-  getProfitLossReport: (params = {}) => 
-    ApiClient.get('/reports/profit-loss', { params }),
-  
-  // Get balance sheet report
-  getBalanceSheet: (params = {}) => 
-    ApiClient.get('/reports/balance-sheet', { params }),
-  
-  // Export report
-  exportReport: (reportType, params = {}) => 
-    ApiClient.get(`/reports/export/${reportType}`, { 
-      params,
-      responseType: 'blob'
-    })
-};
-
-// Sales API
-const salesApi = {
-  // Get sales documents with filtering and pagination
-  getSalesDocuments: (params = {}) => 
-    ApiClient.get('/sales/documents', { params }),
-  
-  // Get a specific sales document by ID
-  getSalesDocument: (id) => 
-    ApiClient.get(`/sales/documents/${id}`),
-  
-  // Create a new sales document
-  createSalesDocument: (data) => 
-    ApiClient.post('/sales/documents', data),
-  
-  // Update an existing sales document
-  updateSalesDocument: (id, data) => 
-    ApiClient.put(`/sales/documents/${id}`, data),
-  
-  // Delete a sales document
-  deleteSalesDocument: (id) => 
-    ApiClient.delete(`/sales/documents/${id}`),
-  
-  // Issue a ticket
-  issueTicket: (id) => 
-    ApiClient.post(`/sales/documents/${id}/issue`),
-  
-  // Cancel a ticket
-  cancelTicket: (id, data) => 
-    ApiClient.post(`/sales/documents/${id}/cancel`, data),
-  
-  // Get sales statistics
-  getSalesStatistics: (params = {}) => 
-    ApiClient.get('/sales/statistics', { params })
-};
-
-// Export the API client and services
-export { ApiClient, accountsApi, authApi, financeApi, reportsApi, salesApi };
-
+// Export the API client as default
 export default apiClient

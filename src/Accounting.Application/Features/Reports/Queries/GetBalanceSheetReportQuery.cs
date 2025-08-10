@@ -1,5 +1,7 @@
 using Accounting.Application.Common.Models;
 using MediatR;
+using System;
+using System.Collections.Generic;
 
 namespace Accounting.Application.Features.Reports.Queries
 {

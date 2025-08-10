@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
             "FluentValidation": {
               "target": "Package",
               "version": "[10.4.0, )"
@@ -83,6 +87,10 @@
             "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "itext7": {
+              "target": "Package",
+              "version": "[8.0.2, )"
             }
           },
           "imports": [
