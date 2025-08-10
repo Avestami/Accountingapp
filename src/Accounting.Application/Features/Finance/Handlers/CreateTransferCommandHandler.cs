@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Accounting.Application.Common.Commands;
@@ -28,58 +29,70 @@ namespace Accounting.Application.Features.Finance.Handlers
         {
             try
             {
-                // Validate accounts exist and are different
-                if (request.FromAccountId == request.ToAccountId)
+                // Custom validation
+                if (!request.IsValid(out string validationError))
                 {
-                    return Result.Failure<TransferDto>("From and To accounts cannot be the same");
+                    return Result<TransferDto>.Failure(validationError);
                 }
 
+                // Validate bank accounts exist and belong to the company
                 var fromBankAccount = await _context.BankAccounts
-                    .FirstOrDefaultAsync(a => a.Id == request.FromAccountId, cancellationToken);
-
+                    .FirstOrDefaultAsync(ba => ba.Id == request.FromAccountId && ba.Company == request.Company, cancellationToken);
+                
                 var toBankAccount = await _context.BankAccounts
-                    .FirstOrDefaultAsync(a => a.Id == request.ToAccountId, cancellationToken);
+                    .FirstOrDefaultAsync(ba => ba.Id == request.ToAccountId && ba.Company == request.Company, cancellationToken);
 
                 if (fromBankAccount == null)
                 {
-                    return Result.Failure<TransferDto>("From bank account not found");
+                    return Result<TransferDto>.Failure("From bank account not found");
                 }
 
                 if (toBankAccount == null)
                 {
-                    return Result.Failure<TransferDto>("To bank account not found");
+                    return Result<TransferDto>.Failure("To bank account not found");
+                }
+
+                // Check if from account has sufficient balance
+                var currentBalance = await GetAccountBalance(request.FromAccountId, request.Company, cancellationToken);
+                if (currentBalance < request.Amount)
+                {
+                    return Result<TransferDto>.Failure($"Insufficient balance in from account. Available: {currentBalance:C}");
                 }
 
                 // Generate document number
-                var documentNumber = await _documentNumberService.GetNextNumberAsync("TRANSFER", request.Company);
+                var documentNumber = await _documentNumberService.GetNextNumberAsync(
+                    DocumentType.Transfer, 
+                    request.Company, 
+                    cancellationToken);
 
                 // Calculate local amount
-                var localAmount = request.ExchangeRate.HasValue 
-                    ? request.Amount * request.ExchangeRate.Value 
-                    : request.Amount;
+                var localAmount = request.Currency == "IRR" ? request.Amount : request.Amount * (request.ExchangeRate ?? 1);
 
-                // Create transfer entity
                 var transfer = new Transfer
                 {
                     DocumentNumber = documentNumber,
                     Date = request.Date,
                     Description = request.Description,
                     Amount = request.Amount,
+                    LocalAmount = localAmount,
                     Currency = request.Currency,
-                    ExchangeRate = request.ExchangeRate,
+                    ExchangeRate = request.ExchangeRate ?? 1,
                     FromBankAccountId = request.FromAccountId,
                     ToBankAccountId = request.ToAccountId,
                     Reference = request.Reference,
                     Notes = request.Notes,
-                    Status = Accounting.Domain.Entities.TransferStatus.Draft,
+                    Status = TransferStatus.Pending,
                     Company = request.Company,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 _context.Transfers.Add(transfer);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                // Return DTO
+                // Create ledger entries
+                await CreateLedgerEntriesAsync(transfer, fromBankAccount, toBankAccount, cancellationToken);
+
                 var transferDto = new TransferDto
                 {
                     Id = transfer.Id,
@@ -87,6 +100,7 @@ namespace Accounting.Application.Features.Finance.Handlers
                     Date = transfer.Date,
                     Description = transfer.Description,
                     Amount = transfer.Amount,
+                    LocalAmount = transfer.LocalAmount,
                     Currency = transfer.Currency,
                     ExchangeRate = transfer.ExchangeRate,
                     FromAccountId = transfer.FromBankAccountId,
@@ -101,12 +115,63 @@ namespace Accounting.Application.Features.Finance.Handlers
                     UpdatedAt = transfer.UpdatedAt
                 };
 
-                return Result.Success(transferDto);
+                return Result<TransferDto>.Success(transferDto);
             }
             catch (Exception ex)
             {
-                return Result.Failure<TransferDto>($"Error creating transfer: {ex.Message}");
+                return Result<TransferDto>.Failure($"Error creating transfer: {ex.Message}");
             }
+        }
+
+        private async Task<decimal> GetAccountBalance(int accountId, string company, CancellationToken cancellationToken)
+        {
+            var balance = await _context.LedgerEntries
+                .Where(le => le.BankAccountId == accountId && le.Company == company)
+                .SumAsync(le => le.LocalDebitAmount - le.LocalCreditAmount, cancellationToken);
+
+            return balance;
+        }
+
+        private async Task CreateLedgerEntriesAsync(Transfer transfer, BankAccount fromAccount, BankAccount toAccount, CancellationToken cancellationToken)
+        {
+            // Debit: From Account (decrease balance)
+            var fromEntry = new LedgerEntry
+            {
+                Date = transfer.Date,
+                DocumentNumber = transfer.DocumentNumber,
+                Description = $"Transfer to {toAccount.AccountName}",
+                DebitAmount = 0,
+                CreditAmount = transfer.Amount,
+                Currency = transfer.Currency,
+                ExchangeRate = transfer.ExchangeRate,
+                LocalDebitAmount = 0,
+                LocalCreditAmount = transfer.LocalAmount,
+                BankAccountId = transfer.FromBankAccountId,
+                Reference = transfer.Reference,
+                Company = transfer.Company
+            };
+
+            // Credit: To Account (increase balance)
+            var toEntry = new LedgerEntry
+            {
+                Date = transfer.Date,
+                DocumentNumber = transfer.DocumentNumber,
+                Description = $"Transfer from {fromAccount.AccountName}",
+                DebitAmount = transfer.Amount,
+                CreditAmount = 0,
+                Currency = transfer.Currency,
+                ExchangeRate = transfer.ExchangeRate,
+                LocalDebitAmount = transfer.LocalAmount,
+                LocalCreditAmount = 0,
+                BankAccountId = transfer.ToBankAccountId,
+                Reference = transfer.Reference,
+                Company = transfer.Company
+            };
+
+            _context.LedgerEntries.Add(fromEntry);
+            _context.LedgerEntries.Add(toEntry);
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

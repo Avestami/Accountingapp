@@ -4,12 +4,14 @@ using MediatR;
 using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.DTOs;
-using Accounting.Domain.Entities;
 
 namespace Accounting.Application.Features.Finance.Commands
 {
-    public class CreateCostCommand : ICommand<Result<CostDto>>
+    public class UpdateTransferCommand : ICommand<Result<TransferDto>>
     {
+        [Required]
+        public int Id { get; set; }
+
         [Required]
         public DateTime Date { get; set; }
 
@@ -30,10 +32,10 @@ namespace Accounting.Application.Features.Finance.Commands
         public decimal? ExchangeRate { get; set; }
 
         [Required]
-        public PaymentSource PaymentSource { get; set; }
+        public int FromAccountId { get; set; }
 
-        public int? BankAccountId { get; set; }
-        public int? CounterpartyId { get; set; }
+        [Required]
+        public int ToAccountId { get; set; }
 
         [MaxLength(100)]
         public string? Reference { get; set; }
@@ -45,31 +47,30 @@ namespace Accounting.Application.Features.Finance.Commands
         [MaxLength(50)]
         public string Company { get; set; } = string.Empty;
 
+        [Required]
         [MaxLength(50)]
-        public string? CreatedBy { get; set; }
+        public string UpdatedBy { get; set; } = string.Empty;
 
+        // Custom validation method
         public bool IsValid(out string errorMessage)
         {
             errorMessage = string.Empty;
 
-            // Check if date is not too far in the future (more than 1 year)
-            if (Date > DateTime.Now.AddYears(1))
+            if (FromAccountId == ToAccountId)
             {
-                errorMessage = "Date cannot be more than 1 year in the future";
+                errorMessage = "From and To accounts cannot be the same";
                 return false;
             }
 
-            // Check if exchange rate is required for foreign currency
-            if (Currency != "IRR" && (!ExchangeRate.HasValue || ExchangeRate.Value <= 0))
+            if (Date > DateTime.Now.AddDays(1))
             {
-                errorMessage = "Exchange rate is required for foreign currency transactions";
+                errorMessage = "Transfer date cannot be more than 1 day in the future";
                 return false;
             }
 
-            // Check if bank account is required for bank payment source
-            if (PaymentSource == PaymentSource.Bank && !BankAccountId.HasValue)
+            if (Currency != "IRR" && !ExchangeRate.HasValue)
             {
-                errorMessage = "Bank account is required for bank payment source";
+                errorMessage = "Exchange rate is required for foreign currency transfers";
                 return false;
             }
 

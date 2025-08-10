@@ -345,6 +345,50 @@ namespace Accounting.API.Controllers
         }
 
         /// <summary>
+        /// Update transfer
+        /// </summary>
+        [HttpPut("transfers/{id}")]
+        [Permission(Permissions.FinanceUpdate)]
+        public async Task<IActionResult> UpdateTransfer(int id, [FromBody] UpdateTransferCommand command)
+        {
+            command.Id = id;
+            command.Company = User.FindFirst("company")?.Value ?? "demo";
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Delete transfer
+        /// </summary>
+        [HttpDelete("transfers/{id}")]
+        [Permission(Permissions.FinanceDelete)]
+        public async Task<IActionResult> DeleteTransfer(int id)
+        {
+            var command = new DeleteTransferCommand 
+            { 
+                Id = id, 
+                Company = User.FindFirst("company")?.Value ?? "demo",
+                DeletedBy = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system"
+            };
+            
+            var result = await _mediator.Send(command);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Update transfer status (confirm/cancel)
         /// </summary>
         [HttpPut("transfers/{id}/status")]

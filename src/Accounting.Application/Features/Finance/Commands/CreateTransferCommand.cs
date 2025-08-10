@@ -17,13 +17,15 @@ namespace Accounting.Application.Features.Finance.Commands
         public string Description { get; set; } = string.Empty;
 
         [Required]
-        [Range(0.01, double.MaxValue)]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
         public decimal Amount { get; set; }
 
         [Required]
         [MaxLength(3)]
+        [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Currency must be a valid 3-letter code")]
         public string Currency { get; set; } = "IRR";
 
+        [Range(0.01, double.MaxValue, ErrorMessage = "Exchange rate must be greater than 0")]
         public decimal? ExchangeRate { get; set; }
 
         [Required]
@@ -41,5 +43,35 @@ namespace Accounting.Application.Features.Finance.Commands
         [Required]
         [MaxLength(50)]
         public string Company { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string CreatedBy { get; set; } = string.Empty;
+
+        // Custom validation method
+        public bool IsValid(out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (FromAccountId == ToAccountId)
+            {
+                errorMessage = "From and To accounts cannot be the same";
+                return false;
+            }
+
+            if (Date > DateTime.Now.AddDays(1))
+            {
+                errorMessage = "Transfer date cannot be more than 1 day in the future";
+                return false;
+            }
+
+            if (Currency != "IRR" && !ExchangeRate.HasValue)
+            {
+                errorMessage = "Exchange rate is required for foreign currency transfers";
+                return false;
+            }
+
+            return true;
+        }
     }
 }
