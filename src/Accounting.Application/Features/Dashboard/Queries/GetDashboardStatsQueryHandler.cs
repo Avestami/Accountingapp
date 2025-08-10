@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Common.Queries;
 using Accounting.Application.Interfaces;
+using Accounting.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Application.Features.Dashboard.Queries
@@ -36,9 +37,9 @@ namespace Accounting.Application.Features.Dashboard.Queries
                 stats.SalesDocuments = new SalesStatsDto
                 {
                     Total = salesDocuments.Count,
-                    Issued = salesDocuments.Count(t => t.Status == Domain.Enums.TicketStatus.Completed),
-                    Unissued = salesDocuments.Count(t => t.Status == Domain.Enums.TicketStatus.Pending),
-                    Canceled = salesDocuments.Count(t => t.Status == Domain.Enums.TicketStatus.Cancelled)
+                    Issued = salesDocuments.Count(t => t.Status == TicketStatus.Completed),
+                    Unissued = salesDocuments.Count(t => t.Status == TicketStatus.Pending),
+                    Canceled = salesDocuments.Count(t => t.Status == TicketStatus.Cancelled)
                 };
 
                 // Get Revenue Statistics
@@ -63,11 +64,12 @@ namespace Accounting.Application.Features.Dashboard.Queries
 
                 // Get Pending Vouchers Count
                 stats.PendingVouchers = await _context.Vouchers
-                    .CountAsync(v => v.Status == Domain.Enums.VoucherStatus.Pending, cancellationToken);
+                    .CountAsync(v => v.Status == VoucherStatus.Pending, cancellationToken);
 
                 // Get Active Users Count (users who logged in within the last 30 days)
+                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
                 stats.ActiveUsers = await _context.Users
-                    .CountAsync(u => u.LastLoginAt >= DateTime.Now.AddDays(-30), cancellationToken);
+                    .CountAsync(u => u.IsActive && u.LastLoginAt.HasValue && u.LastLoginAt >= thirtyDaysAgo, cancellationToken);
 
                 // Generate Revenue Chart Data (daily revenue for the period)
                 stats.RevenueChart = await GenerateRevenueChartData(fromDate, toDate, cancellationToken);
@@ -100,7 +102,8 @@ namespace Accounting.Application.Features.Dashboard.Queries
                 .Select(g => new ChartDataDto
                 {
                     Label = g.Key.ToString("yyyy-MM-dd"),
-                    Value = g.Sum(i => i.Amount)
+                    Value = g.Sum(i => i.Amount),
+                    Date = g.Key
                 })
                 .OrderBy(x => x.Label)
                 .ToListAsync(cancellationToken);
@@ -126,16 +129,19 @@ namespace Accounting.Application.Features.Dashboard.Queries
         private async Task<List<RecentActivityDto>> GetRecentSales(CancellationToken cancellationToken)
         {
             var recentSales = await _context.Tickets
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(5)
-                .Select(s => new RecentActivityDto
+                .Where(t => t.Status == TicketStatus.Completed)
+                .OrderByDescending(t => t.CompletionDate)
+                .Take(10)
+                .Select(t => new RecentActivityDto
                 {
-                    Id = s.Id,
-                    DocumentNumber = s.TicketNumber,
-                    Counterparty = s.Title,
-                    Amount = s.Amount,
-                    Date = s.CreatedAt,
-                    Status = s.Status.ToString()
+                    Id = t.Id,
+                    DocumentNumber = t.TicketNumber,
+                    Counterparty = t.Counterparty != null ? t.Counterparty.Name : "N/A",
+                    Amount = t.Amount,
+                    Currency = t.Currency,
+                    Date = t.CompletionDate ?? t.CreatedAt,
+                    Status = t.Status.ToString(),
+                    Description = t.Title
                 })
                 .ToListAsync(cancellationToken);
 
@@ -145,16 +151,19 @@ namespace Accounting.Application.Features.Dashboard.Queries
         private async Task<List<RecentActivityDto>> GetRecentVouchers(CancellationToken cancellationToken)
         {
             var recentVouchers = await _context.Vouchers
+                .Where(v => v.Status == VoucherStatus.Pending)
                 .OrderByDescending(v => v.CreatedAt)
-                .Take(5)
+                .Take(10)
                 .Select(v => new RecentActivityDto
                 {
                     Id = v.Id,
                     DocumentNumber = v.VoucherNumber,
-                    Counterparty = v.Description,
+                    Counterparty = "N/A", // Vouchers don't have counterparty
                     Amount = v.Amount,
+                    Currency = v.Currency,
                     Date = v.CreatedAt,
-                    Status = v.Status.ToString()
+                    Status = v.Status.ToString(),
+                    Description = v.Description
                 })
                 .ToListAsync(cancellationToken);
 
