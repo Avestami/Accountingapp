@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/services/api'
+import { banksApi } from '@/services/api'
 
 export const useBankStore = defineStore('bank', () => {
   const banks = ref([])
@@ -24,9 +24,9 @@ export const useBankStore = defineStore('bank', () => {
       if (query.sortBy) params.append('sortBy', query.sortBy)
       if (query.sortDirection) params.append('sortDirection', query.sortDirection)
 
-      const response = await api.get(`/banks?${params.toString()}`)
-      banks.value = response.data.items
-      return response.data
+      const response = await banksApi.getBanks(Object.fromEntries(params))
+      banks.value = response.data?.items || response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch banks'
       throw err
@@ -41,9 +41,9 @@ export const useBankStore = defineStore('bank', () => {
     error.value = null
     
     try {
-      const response = await api.get(`/banks/${id}`)
-      currentBank.value = response.data
-      return response.data
+      const response = await banksApi.getBank(id)
+      currentBank.value = response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch bank'
       throw err
@@ -58,14 +58,15 @@ export const useBankStore = defineStore('bank', () => {
     error.value = null
     
     try {
-      const response = await api.post('/banks', bankData)
+      const response = await banksApi.createBank(bankData)
+      const newBank = response.data || response
       
       // Add to local banks array if it exists
       if (banks.value) {
-        banks.value.unshift(response.data)
+        banks.value.unshift(newBank)
       }
       
-      return response.data
+      return newBank
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to create bank'
       throw err
@@ -80,22 +81,23 @@ export const useBankStore = defineStore('bank', () => {
     error.value = null
     
     try {
-      const response = await api.put(`/banks/${id}`, bankData)
+      const response = await banksApi.updateBank(id, bankData)
+      const updatedBank = response.data || response
       
       // Update in local banks array if it exists
       if (banks.value) {
         const index = banks.value.findIndex(b => b.id === id)
         if (index !== -1) {
-          banks.value[index] = response.data
+          banks.value[index] = updatedBank
         }
       }
       
       // Update current bank if it's the same
       if (currentBank.value && currentBank.value.id === id) {
-        currentBank.value = response.data
+        currentBank.value = updatedBank
       }
       
-      return response.data
+      return updatedBank
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to update bank'
       throw err
@@ -110,7 +112,7 @@ export const useBankStore = defineStore('bank', () => {
     error.value = null
     
     try {
-      await api.delete(`/banks/${id}`)
+      await banksApi.deleteBank(id)
       
       // Remove from local banks array if it exists
       if (banks.value) {

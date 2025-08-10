@@ -22,7 +22,7 @@ namespace Accounting.API.Controllers
         private readonly ICommandHandler<IssueTicketCommand, Result<TicketDto>> _issueTicketHandler;
         private readonly ICommandHandler<CancelTicketCommand, Result<TicketDto>> _cancelTicketHandler;
         private readonly IQueryHandler<GetTicketByIdQuery, Result<TicketDto>> _getTicketByIdHandler;
-        private readonly IQueryHandler<GetTicketsQuery, Result<PagedResult<TicketDto>>> _getTicketsHandler;
+        private readonly IQueryHandler<GetTicketsQuery, Result<Accounting.Application.Common.Models.PagedResult<TicketDto>>> _getTicketsHandler;
 
         public TicketsController(
             ICommandHandler<CreateTicketCommand, Result<TicketDto>> createTicketHandler,
@@ -31,7 +31,7 @@ namespace Accounting.API.Controllers
             ICommandHandler<IssueTicketCommand, Result<TicketDto>> issueTicketHandler,
             ICommandHandler<CancelTicketCommand, Result<TicketDto>> cancelTicketHandler,
             IQueryHandler<GetTicketByIdQuery, Result<TicketDto>> getTicketByIdHandler,
-            IQueryHandler<GetTicketsQuery, Result<PagedResult<TicketDto>>> getTicketsHandler)
+            IQueryHandler<GetTicketsQuery, Result<Accounting.Application.Common.Models.PagedResult<TicketDto>>> getTicketsHandler)
         {
             _createTicketHandler = createTicketHandler;
             _updateTicketHandler = updateTicketHandler;
@@ -62,7 +62,7 @@ namespace Accounting.API.Controllers
         /// Get all tickets with pagination and filtering
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<PagedResult<TicketDto>>> GetTickets([FromQuery] GetTicketsQuery query)
+        public async Task<ActionResult<Accounting.Application.Common.Models.PagedResult<TicketDto>>> GetTickets([FromQuery] GetTicketsQuery query)
         {
             var result = await _getTicketsHandler.Handle(query, CancellationToken.None);
             

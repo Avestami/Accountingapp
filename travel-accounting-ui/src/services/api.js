@@ -294,6 +294,110 @@ export const settingsApi = {
   }
 }
 
+// Airlines API
+export const airlinesApi = {
+  async getAirlines(params = {}) {
+    return apiClient.get('/airlines', params)
+  },
+
+  async getAirline(id) {
+    return apiClient.get(`/airlines/${id}`)
+  },
+
+  async createAirline(airlineData) {
+    return apiClient.post('/airlines', airlineData)
+  },
+
+  async updateAirline(id, airlineData) {
+    return apiClient.put(`/airlines/${id}`, airlineData)
+  },
+
+  async deleteAirline(id) {
+    return apiClient.delete(`/airlines/${id}`)
+  }
+}
+
+// Banks API
+export const banksApi = {
+  async getBanks(params = {}) {
+    return apiClient.get('/banks', params)
+  },
+
+  async getBank(id) {
+    return apiClient.get(`/banks/${id}`)
+  },
+
+  async createBank(bankData) {
+    return apiClient.post('/banks', bankData)
+  },
+
+  async updateBank(id, bankData) {
+    return apiClient.put(`/banks/${id}`, bankData)
+  },
+
+  async deleteBank(id) {
+    return apiClient.delete(`/banks/${id}`)
+  }
+}
+
+// Counterparties API
+export const counterpartiesApi = {
+  async getCounterparties(params = {}) {
+    return apiClient.get('/counterparties', params)
+  },
+
+  async getCounterparty(id) {
+    return apiClient.get(`/counterparties/${id}`)
+  },
+
+  async createCounterparty(counterpartyData) {
+    return apiClient.post('/counterparties', counterpartyData)
+  },
+
+  async updateCounterparty(id, counterpartyData) {
+    return apiClient.put(`/counterparties/${id}`, counterpartyData)
+  },
+
+  async deleteCounterparty(id) {
+    return apiClient.delete(`/counterparties/${id}`)
+  },
+
+  async getCounterpartiesSummary() {
+    return apiClient.get('/counterparties/summary')
+  }
+}
+
+// Locations API
+export const locationsApi = {
+  async getLocations(params = {}) {
+    return apiClient.get('/locations', params)
+  },
+
+  async getLocation(id) {
+    return apiClient.get(`/locations/${id}`)
+  },
+
+  async createLocation(locationData) {
+    return apiClient.post('/locations', locationData)
+  },
+
+  async updateLocation(id, locationData) {
+    return apiClient.put(`/locations/${id}`, locationData)
+  },
+
+  async deleteLocation(id) {
+    return apiClient.delete(`/locations/${id}`)
+  },
+
+  async getCountries() {
+    return apiClient.get('/locations/countries')
+  },
+
+  async getCitiesByCountry(countryId) {
+    return apiClient.get(`/locations/countries/${countryId}/cities`)
+  }
+}
+
 // Dashboard API
 export const dashboardApi = {
   async getDashboardStats(params = {}) {

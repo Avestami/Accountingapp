@@ -26,6 +26,7 @@ namespace Accounting.Infrastructure
         public IRepository<DocumentNumber> DocumentNumbers { get; private set; }
         public IRepository<AuditLog> AuditLogs { get; private set; }
         public IRepository<Report> Reports { get; private set; }
+        public IRepository<Location> Locations { get; private set; }
 
         public UnitOfWork(AccountingDbContext context)
         {
@@ -43,6 +44,7 @@ namespace Accounting.Infrastructure
             DocumentNumbers = new Repository<DocumentNumber>(_context);
             AuditLogs = new Repository<AuditLog>(_context);
             Reports = new Repository<Report>(_context);
+            Locations = new Repository<Location>(_context);
         }
 
         public async Task<int> SaveChangesAsync()

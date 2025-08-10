@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/services/api'
+import { counterpartiesApi } from '@/services/api'
 
 export const useCounterpartyStore = defineStore('counterparty', () => {
   const counterparties = ref([])
@@ -29,9 +29,9 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
       if (query.sortBy) params.append('sortBy', query.sortBy)
       if (query.sortDirection) params.append('sortDirection', query.sortDirection)
 
-      const response = await api.get(`/counterparties?${params.toString()}`)
-      counterparties.value = response.data.items
-      return response.data
+      const response = await counterpartiesApi.getCounterparties(Object.fromEntries(params))
+      counterparties.value = response.data?.items || response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch counterparties'
       throw err
@@ -46,9 +46,9 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
     error.value = null
     
     try {
-      const response = await api.get(`/counterparties/${id}`)
-      currentCounterparty.value = response.data
-      return response.data
+      const response = await counterpartiesApi.getCounterparty(id)
+      currentCounterparty.value = response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch counterparty'
       throw err
@@ -63,14 +63,15 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
     error.value = null
     
     try {
-      const response = await api.post('/counterparties', counterpartyData)
+      const response = await counterpartiesApi.createCounterparty(counterpartyData)
+      const newCounterparty = response.data || response
       
       // Add to local counterparties array if it exists
       if (counterparties.value) {
-        counterparties.value.unshift(response.data)
+        counterparties.value.unshift(newCounterparty)
       }
       
-      return response.data
+      return newCounterparty
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to create counterparty'
       throw err
@@ -85,22 +86,23 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
     error.value = null
     
     try {
-      const response = await api.put(`/counterparties/${id}`, counterpartyData)
+      const response = await counterpartiesApi.updateCounterparty(id, counterpartyData)
+      const updatedCounterparty = response.data || response
       
       // Update in local counterparties array if it exists
       if (counterparties.value) {
         const index = counterparties.value.findIndex(c => c.id === id)
         if (index !== -1) {
-          counterparties.value[index] = response.data
+          counterparties.value[index] = updatedCounterparty
         }
       }
       
       // Update current counterparty if it's the same
       if (currentCounterparty.value && currentCounterparty.value.id === id) {
-        currentCounterparty.value = response.data
+        currentCounterparty.value = updatedCounterparty
       }
       
-      return response.data
+      return updatedCounterparty
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to update counterparty'
       throw err
@@ -115,7 +117,7 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
     error.value = null
     
     try {
-      await api.delete(`/counterparties/${id}`)
+      await counterpartiesApi.deleteCounterparty(id)
       
       // Remove from local counterparties array if it exists
       if (counterparties.value) {
@@ -157,8 +159,8 @@ export const useCounterpartyStore = defineStore('counterparty', () => {
   // Get counterparties summary/statistics
   const getCounterpartiesSummary = async () => {
     try {
-      const response = await api.get('/counterparties/summary')
-      return response.data
+      const response = await counterpartiesApi.getCounterpartiesSummary()
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch counterparties summary'
       throw err

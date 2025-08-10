@@ -411,11 +411,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('auth_login_attempts')
       localStorage.removeItem('auth_lockout_until')
     },
-    
-    updateActivity() {
-      this.lastActivity = Date.now()
-      localStorage.setItem('last_activity', this.lastActivity.toString())
-    },
 
     updateUserProfile(profileData) {
       if (this.user) {

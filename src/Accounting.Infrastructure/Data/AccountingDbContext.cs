@@ -35,6 +35,7 @@ namespace Accounting.Infrastructure.Data
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Origin> Origins { get; set; }
         public DbSet<Destination> Destinations { get; set; }
+        public DbSet<Location> Locations { get; set; }
         public DbSet<DocumentNumber> DocumentNumbers { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Report> Reports { get; set; }
@@ -54,6 +55,7 @@ namespace Accounting.Infrastructure.Data
             ConfigureFxTransaction(modelBuilder);
             ConfigureFxConsumption(modelBuilder);
             ConfigureTransfer(modelBuilder);
+            ConfigureLocation(modelBuilder);
             ConfigureDocumentNumber(modelBuilder);
             ConfigureAuditLog(modelBuilder);
             ConfigureReport(modelBuilder);
@@ -315,6 +317,26 @@ namespace Accounting.Infrastructure.Data
                     .OnDelete(DeleteBehavior.NoAction);
                     
                 entity.HasIndex(e => e.DocumentNumber).IsUnique();
+            });
+        }
+        
+        private void ConfigureLocation(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Location>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Code).HasMaxLength(10);
+                entity.Property(e => e.IsActive).IsRequired();
+                
+                entity.HasOne(e => e.Parent)
+                    .WithMany(l => l.Children)
+                    .HasForeignKey(e => e.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasIndex(e => new { e.Name, e.Type }).IsUnique();
+                entity.HasIndex(e => e.Code).IsUnique().HasFilter("[Code] IS NOT NULL");
             });
         }
         

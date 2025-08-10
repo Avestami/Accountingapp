@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { locationsApi } from '@/services/api'
 
 export const useLocationStore = defineStore('location', () => {
   // State
@@ -19,24 +20,25 @@ export const useLocationStore = defineStore('location', () => {
     error.value = null
     
     try {
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/locations', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization header if needed
-        }
-      })
+      const params = new URLSearchParams()
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch locations')
-      }
-      
-      const data = await response.json()
-      locations.value = data
+      // Add query parameters
+      if (filters.page) params.append('page', filters.page)
+      if (filters.pageSize) params.append('pageSize', filters.pageSize)
+      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm)
+      if (filters.isActive !== undefined) params.append('isActive', filters.isActive)
+      if (filters.type) params.append('type', filters.type)
+      if (filters.countryId) params.append('countryId', filters.countryId)
+      if (filters.sortBy) params.append('sortBy', filters.sortBy)
+      if (filters.sortDirection) params.append('sortDirection', filters.sortDirection)
+
+      const response = await locationsApi.getLocations(Object.fromEntries(params))
+      locations.value = response.data?.items || response.data || response
+      return response.data || response
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Failed to fetch locations'
       console.error('Error fetching locations:', err)
+      throw err
     } finally {
       loading.value = false
     }
@@ -47,22 +49,11 @@ export const useLocationStore = defineStore('location', () => {
     error.value = null
     
     try {
-      const response = await fetch(`/api/locations/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch location')
-      }
-      
-      const data = await response.json()
-      currentLocation.value = data
-      return data
+      const response = await locationsApi.getLocation(id)
+      currentLocation.value = response.data || response
+      return response.data || response
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Failed to fetch location'
       console.error('Error fetching location:', err)
       throw err
     } finally {
@@ -75,23 +66,17 @@ export const useLocationStore = defineStore('location', () => {
     error.value = null
     
     try {
-      const response = await fetch('/api/locations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(locationData)
-      })
+      const response = await locationsApi.createLocation(locationData)
+      const newLocation = response.data || response
       
-      if (!response.ok) {
-        throw new Error('Failed to create location')
+      // Add to local locations array if it exists
+      if (locations.value) {
+        locations.value.unshift(newLocation)
       }
       
-      const newLocation = await response.json()
-      locations.value.push(newLocation)
       return newLocation
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Failed to create location'
       console.error('Error creating location:', err)
       throw err
     } finally {
@@ -104,31 +89,25 @@ export const useLocationStore = defineStore('location', () => {
     error.value = null
     
     try {
-      const response = await fetch(`/api/locations/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(locationData)
-      })
+      const response = await locationsApi.updateLocation(id, locationData)
+      const updatedLocation = response.data || response
       
-      if (!response.ok) {
-        throw new Error('Failed to update location')
+      // Update in local locations array if it exists
+      if (locations.value) {
+        const index = locations.value.findIndex(l => l.id === id)
+        if (index !== -1) {
+          locations.value[index] = updatedLocation
+        }
       }
       
-      const updatedLocation = await response.json()
-      const index = locations.value.findIndex(l => l.id === id)
-      if (index !== -1) {
-        locations.value[index] = updatedLocation
-      }
-      
+      // Update current location if it's the same
       if (currentLocation.value && currentLocation.value.id === id) {
         currentLocation.value = updatedLocation
       }
       
       return updatedLocation
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Failed to update location'
       console.error('Error updating location:', err)
       throw err
     } finally {
@@ -141,29 +120,56 @@ export const useLocationStore = defineStore('location', () => {
     error.value = null
     
     try {
-      const response = await fetch(`/api/locations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      await locationsApi.deleteLocation(id)
       
-      if (!response.ok) {
-        throw new Error('Failed to delete location')
+      // Remove from local locations array if it exists
+      if (locations.value) {
+        const index = locations.value.findIndex(l => l.id === id)
+        if (index !== -1) {
+          locations.value.splice(index, 1)
+        }
       }
       
-      locations.value = locations.value.filter(l => l.id !== id)
-      
+      // Clear current location if it's the same
       if (currentLocation.value && currentLocation.value.id === id) {
         currentLocation.value = null
       }
+      
+      return true
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Failed to delete location'
       console.error('Error deleting location:', err)
       throw err
     } finally {
       loading.value = false
     }
+  }
+
+  // Get countries
+  const getCountries = async () => {
+    try {
+      const response = await locationsApi.getCountries()
+      return response.data || response
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to fetch countries'
+      throw err
+    }
+  }
+
+  // Get cities by country
+  const getCitiesByCountry = async (countryId) => {
+    try {
+      const response = await locationsApi.getCitiesByCountry(countryId)
+      return response.data || response
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to fetch cities'
+      throw err
+    }
+  }
+
+  // Get active locations only
+  const getActiveLocationsList = async (query = {}) => {
+    return await getLocations({ ...query, isActive: true })
   }
 
   // Utility functions
@@ -198,8 +204,9 @@ export const useLocationStore = defineStore('location', () => {
     createLocation,
     updateLocation,
     deleteLocation,
-    
-    // Utilities
+    getCountries,
+    getCitiesByCountry,
+    getActiveLocationsList,
     clearError,
     clearCurrentLocation,
     reset

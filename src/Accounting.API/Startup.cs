@@ -4,16 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
 using System.IO;
+using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
-using System.Text;
-using System.Threading;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -33,6 +28,7 @@ using Accounting.Infrastructure;
 using Accounting.Infrastructure.Repositories;
 using Accounting.Application.Common.Authorization;
 using Accounting.Application.Services;
+using Accounting.Application.Common.Exceptions;
 
 namespace Accounting.API
 {
@@ -74,6 +70,18 @@ namespace Accounting.API
             services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Airlines.Commands.DeleteAirlineCommand, Accounting.Application.Common.Models.Result<bool>>, Accounting.Application.Features.Airlines.Handlers.DeleteAirlineCommandHandler>();
             services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Airlines.Queries.GetAirlinesQuery, Accounting.Application.Common.Models.Result<Accounting.Application.Common.Models.PagedResult<Accounting.Application.DTOs.AirlineDto>>>, Accounting.Application.Features.Airlines.Handlers.GetAirlinesQueryHandler>();
             services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Airlines.Queries.GetAirlineByIdQuery, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.AirlineDto>>, Accounting.Application.Features.Airlines.Handlers.GetAirlineByIdQueryHandler>();
+
+            // Register Voucher Handlers
+            services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Vouchers.Queries.GetVouchersQuery, Accounting.Application.Common.Models.Result<Accounting.Application.Common.Models.PagedResult<Accounting.Application.DTOs.VoucherDto>>>, Accounting.Application.Features.Vouchers.Handlers.GetVouchersQueryHandler>();
+            services.AddScoped<Accounting.Application.Common.Queries.IQueryHandler<Accounting.Application.Features.Vouchers.Queries.GetVoucherByIdQuery, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.GetVoucherByIdQueryHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.CreateVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.CreateVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.UpdateVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.UpdateVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.DeleteVoucherCommand, Accounting.Application.Common.Models.Result<bool>>, Accounting.Application.Features.Vouchers.Handlers.DeleteVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.PostVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.PostVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.ApproveVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.ApproveVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.RejectVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.RejectVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.SubmitVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.SubmitVoucherCommandHandler>();
+            services.AddScoped<Accounting.Application.Common.Commands.ICommandHandler<Accounting.Application.Features.Vouchers.Commands.CancelVoucherCommand, Accounting.Application.Common.Models.Result<Accounting.Application.DTOs.VoucherDto>>, Accounting.Application.Features.Vouchers.Handlers.CancelVoucherCommandHandler>();
 
             // Add MediatR
             services.AddMediatR(typeof(CreateTicketCommandHandler).Assembly);

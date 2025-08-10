@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/services/api'
+import { airlinesApi } from '@/services/api'
 
 export const useAirlineStore = defineStore('airline', () => {
   const airlines = ref([])
@@ -24,9 +24,9 @@ export const useAirlineStore = defineStore('airline', () => {
       if (query.sortBy) params.append('sortBy', query.sortBy)
       if (query.sortDirection) params.append('sortDirection', query.sortDirection)
 
-      const response = await api.get(`/airlines?${params.toString()}`)
-      airlines.value = response.data.items
-      return response.data
+      const response = await airlinesApi.getAirlines(Object.fromEntries(params))
+      airlines.value = response.data?.items || response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch airlines'
       throw err
@@ -41,9 +41,9 @@ export const useAirlineStore = defineStore('airline', () => {
     error.value = null
     
     try {
-      const response = await api.get(`/airlines/${id}`)
-      currentAirline.value = response.data
-      return response.data
+      const response = await airlinesApi.getAirline(id)
+      currentAirline.value = response.data || response
+      return response.data || response
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch airline'
       throw err
@@ -58,14 +58,15 @@ export const useAirlineStore = defineStore('airline', () => {
     error.value = null
     
     try {
-      const response = await api.post('/airlines', airlineData)
+      const response = await airlinesApi.createAirline(airlineData)
+      const newAirline = response.data || response
       
       // Add to local airlines array if it exists
       if (airlines.value) {
-        airlines.value.unshift(response.data)
+        airlines.value.unshift(newAirline)
       }
       
-      return response.data
+      return newAirline
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to create airline'
       throw err
@@ -80,22 +81,23 @@ export const useAirlineStore = defineStore('airline', () => {
     error.value = null
     
     try {
-      const response = await api.put(`/airlines/${id}`, airlineData)
+      const response = await airlinesApi.updateAirline(id, airlineData)
+      const updatedAirline = response.data || response
       
       // Update in local airlines array if it exists
       if (airlines.value) {
         const index = airlines.value.findIndex(a => a.id === id)
         if (index !== -1) {
-          airlines.value[index] = response.data
+          airlines.value[index] = updatedAirline
         }
       }
       
       // Update current airline if it's the same
       if (currentAirline.value && currentAirline.value.id === id) {
-        currentAirline.value = response.data
+        currentAirline.value = updatedAirline
       }
       
-      return response.data
+      return updatedAirline
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to update airline'
       throw err
@@ -110,7 +112,7 @@ export const useAirlineStore = defineStore('airline', () => {
     error.value = null
     
     try {
-      await api.delete(`/airlines/${id}`)
+      await airlinesApi.deleteAirline(id)
       
       // Remove from local airlines array if it exists
       if (airlines.value) {

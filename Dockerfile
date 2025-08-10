@@ -1,5 +1,5 @@
 # Use the official .NET SDK image for building
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Copy csproj files and restore dependencies
@@ -21,7 +21,7 @@ RUN dotnet build src/Accounting.API/Accounting.API.csproj -c Release --no-restor
 RUN dotnet publish src/Accounting.API/Accounting.API.csproj -c Release -o /app/api --no-restore
 
 # Use the official .NET runtime image for running
-FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 # Copy the published application

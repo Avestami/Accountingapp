@@ -19,14 +19,14 @@ namespace Accounting.API.Controllers
         private readonly ICommandHandler<CreateAirlineCommand, Result<AirlineDto>> _createHandler;
         private readonly ICommandHandler<UpdateAirlineCommand, Result<AirlineDto>> _updateHandler;
         private readonly ICommandHandler<DeleteAirlineCommand, Result<bool>> _deleteHandler;
-        private readonly IQueryHandler<GetAirlinesQuery, Result<PagedResult<AirlineDto>>> _getHandler;
+        private readonly IQueryHandler<GetAirlinesQuery, Result<Accounting.Application.Common.Models.PagedResult<AirlineDto>>> _getHandler;
         private readonly IQueryHandler<GetAirlineByIdQuery, Result<AirlineDto>> _getByIdHandler;
 
         public AirlinesController(
             ICommandHandler<CreateAirlineCommand, Result<AirlineDto>> createHandler,
             ICommandHandler<UpdateAirlineCommand, Result<AirlineDto>> updateHandler,
             ICommandHandler<DeleteAirlineCommand, Result<bool>> deleteHandler,
-            IQueryHandler<GetAirlinesQuery, Result<PagedResult<AirlineDto>>> getHandler,
+            IQueryHandler<GetAirlinesQuery, Result<Accounting.Application.Common.Models.PagedResult<AirlineDto>>> getHandler,
             IQueryHandler<GetAirlineByIdQuery, Result<AirlineDto>> getByIdHandler)
         {
             _createHandler = createHandler;
@@ -53,7 +53,7 @@ namespace Accounting.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<AirlineDto>>> Get([FromQuery] GetAirlinesQuery query)
+        public async Task<ActionResult<Accounting.Application.Common.Models.PagedResult<AirlineDto>>> Get([FromQuery] GetAirlinesQuery query)
         {
             // Set company from user claims
             query.Company = User.FindFirst("company")?.Value ?? "";

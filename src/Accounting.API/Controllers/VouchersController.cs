@@ -1,7 +1,7 @@
-using Accounting.Application.Common.Commands;
 #nullable enable
 using System.Threading;
 using System.Threading.Tasks;
+using Accounting.Application.Common.Commands;
 using Accounting.Application.Common.Models;
 using Accounting.Application.Common.Queries;
 using Accounting.Application.DTOs;
@@ -28,7 +28,7 @@ namespace Accounting.API.Controllers
         private readonly ICommandHandler<SubmitVoucherCommand, Result<VoucherDto>> _submitVoucherHandler;
         private readonly ICommandHandler<CancelVoucherCommand, Result<VoucherDto>> _cancelVoucherHandler;
         private readonly IQueryHandler<GetVoucherByIdQuery, Result<VoucherDto>> _getVoucherByIdHandler;
-        private readonly IQueryHandler<GetVouchersQuery, Result<PagedResult<VoucherDto>>> _getVouchersHandler;
+        private readonly IQueryHandler<GetVouchersQuery, Result<Accounting.Application.Common.Models.PagedResult<VoucherDto>>> _getVouchersHandler;
 
         public VouchersController(
             ICommandHandler<CreateVoucherCommand, Result<VoucherDto>> createVoucherHandler,
@@ -40,7 +40,7 @@ namespace Accounting.API.Controllers
             ICommandHandler<SubmitVoucherCommand, Result<VoucherDto>> submitVoucherHandler,
             ICommandHandler<CancelVoucherCommand, Result<VoucherDto>> cancelVoucherHandler,
             IQueryHandler<GetVoucherByIdQuery, Result<VoucherDto>> getVoucherByIdHandler,
-            IQueryHandler<GetVouchersQuery, Result<PagedResult<VoucherDto>>> getVouchersHandler)
+            IQueryHandler<GetVouchersQuery, Result<Accounting.Application.Common.Models.PagedResult<VoucherDto>>> getVouchersHandler)
         {
             _createVoucherHandler = createVoucherHandler;
             _updateVoucherHandler = updateVoucherHandler;
@@ -59,7 +59,7 @@ namespace Accounting.API.Controllers
         /// </summary>
         [HttpGet]
         [Permission(Permissions.VouchersView)]
-        public async Task<ActionResult<PagedResult<VoucherDto>>> GetVouchers([FromQuery] GetVouchersQuery query)
+        public async Task<ActionResult<Accounting.Application.Common.Models.PagedResult<VoucherDto>>> GetVouchers([FromQuery] GetVouchersQuery query)
         {
             var result = await _getVouchersHandler.Handle(query, CancellationToken.None);
             

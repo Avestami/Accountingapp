@@ -20,14 +20,14 @@ namespace Accounting.API.Controllers
         private readonly ICommandHandler<UpdateCounterpartyCommand, Result<CounterpartyDto>> _updateHandler;
         private readonly ICommandHandler<DeleteCounterpartyCommand, Result<bool>> _deleteHandler;
         private readonly IQueryHandler<GetCounterpartyByIdQuery, Result<CounterpartyDto>> _getByIdHandler;
-        private readonly IQueryHandler<GetCounterpartiesQuery, Result<PagedResult<CounterpartyDto>>> _getHandler;
+        private readonly IQueryHandler<GetCounterpartiesQuery, Result<Accounting.Application.Common.Models.PagedResult<CounterpartyDto>>> _getHandler;
 
         public CounterpartiesController(
             ICommandHandler<CreateCounterpartyCommand, Result<CounterpartyDto>> createHandler,
             ICommandHandler<UpdateCounterpartyCommand, Result<CounterpartyDto>> updateHandler,
             ICommandHandler<DeleteCounterpartyCommand, Result<bool>> deleteHandler,
             IQueryHandler<GetCounterpartyByIdQuery, Result<CounterpartyDto>> getByIdHandler,
-            IQueryHandler<GetCounterpartiesQuery, Result<PagedResult<CounterpartyDto>>> getHandler)
+            IQueryHandler<GetCounterpartiesQuery, Result<Accounting.Application.Common.Models.PagedResult<CounterpartyDto>>> getHandler)
         {
             _createHandler = createHandler;
             _updateHandler = updateHandler;
@@ -50,7 +50,7 @@ namespace Accounting.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<CounterpartyDto>>> Get([FromQuery] GetCounterpartiesQuery query)
+        public async Task<ActionResult<Accounting.Application.Common.Models.PagedResult<CounterpartyDto>>> Get([FromQuery] GetCounterpartiesQuery query)
         {
             var result = await _getHandler.Handle(query, CancellationToken.None);
             

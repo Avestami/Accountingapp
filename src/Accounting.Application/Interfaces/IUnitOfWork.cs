@@ -18,6 +18,7 @@ namespace Accounting.Application.Interfaces
         IRepository<DocumentNumber> DocumentNumbers { get; }
         IRepository<AuditLog> AuditLogs { get; }
         IRepository<Report> Reports { get; }
+        IRepository<Location> Locations { get; }
 
         // Transaction management
         Task<int> SaveChangesAsync();
